@@ -1,0 +1,115 @@
+bu modülde socket kütüphanesinden yararlanacağız.
+tcp client yazmakla işe başlanır.
+AF_INET bize standart ipv4 adress veya hostname kullanıdığını söyler 
+SOCK_STREAM tcp client içindir 
+bağlanma işlmei tamamlandıktan sonra client servera biraz veri gönderir
+en son işlemde dönen veriyi recv ile alıp print ile yazmaktır.
+bu soket bağlantılarında bazen sokerlerde istisna işleme bloklama agibi konular olabilir onları geçti şimdilik
+-------------------------------
+*UDP_CLIENT
+burada görüldüğü gibi sock_dgram olur soket tipin 
+sendto fonksiyonu veriiyi yollar ve server datayı yollar
+çünkü udp protokolü önceden bağlanmak için coonect() yoktur
+enson adım recvfrom dur bu ayıca data ve remote host ve port ile ilgili bilgiler gönderir.
+bu dediğimiz gibi sadece basit bir bağlantıdır server bunu engelleyebilir
+-----------------------------
+*TCP_SERVER
+dinlemek için serverın istediği adres ve portu gönderiyor
+sonra max 5 olacak şekilde dinlemeye başlar
+sonra maindeki looba girer  bağlantı gelmesi için
+clientdan bağlantı gelince clienta bağlantı geldiğine dair ack verisini yollar
+sonra yeni bir thread objesi oluştururuz  handle client fonksiyonu ile 
+böylece diğer bağlantıların gelmesini bekleriz
+bunu doğru çalıştırınca gördüğüm 
+[*] Listening on 0.0.0.0:9999
+[*] Accepted connection from: 127.0.0.1:55908
+[*] Received: ABCDEF
+
+diğerinde: ACK!
+tamamdır
+-----------------------------
+Replacing Netcat: Netcat'i Değiştirme:
+ilk önce önemli kütüphanelerimizi  dahil ediyoruzç
+sys: os modülüne benziyor dir(sys) ile bu modülün içindeki kütüphanlere bakabilirsiniz.
+exit var bunun içinde programın işleyişini durdurabilir kapatabilirsin
+argv program çalıştırılırken kullanılan parametreleri bir liste halinde tutar
+ gibi
+ socket:
+ getopt:komut satırı seçekleri için unizde bir ayrıştırıcı 
+ threading: threadler için 
+ subprocess: harici komutarı python içinde çalıştırabilmemizi sğlar 
+ 
+ şimdi main ve komutsatırından girilenleri işlemeyi sağalyan işlevlere bakalım
+ client sender fonksyionumuz tcp socket objesi oluştuurp veri göndeiyor
+ daha sonra kullanıcıdan daha fazla girdi bekleriz ve kullanıcı komut dosyasını bitirene kadar veri gönderip almaya devam ederiz. Ekstra satır sonu istemicmizin komut kabuğumuzla uyumlu olması için özellikle kullanıcı girdimize eklenir. 
+ Şimdi serverloop oluştuurp hem komut yürütmemizi hem de komut kabuğumuzu idare edecek bir saplama işlevi oluşturacağız
+ server loop fonksionunda threadlaer ile tcp server yaptık
+ run_command işlmeinde subprocess işlemi var bu bize istemci programlarını bailatmanız ve onlarla etkileşim kurmanız için size bir dizi yol sunan güçlü bir süreç oluşturma arabirimi sağalr.
+ komutu çalıştırı ve sonucu bize bağlı oloan sitemciye geri döndürür. exceptionhandling hataları yakalar ve bize bşarız olanı geri döndürür. 
+ Şimdi diğer file uploads command execution ve our shell kavralarına bakalım
+ echo -ne "GET / HTTP/1.1\r\nHost: www.google.com\r\n\r\n" | python netcat_new.py -t www.google.com -p 80 
+HTTP/1.1 200 OK
+Date: Mon, 01 Feb 2021 09:40:20 GMT
+Expires: -1
+Cache-Control: private, max-age=0
+Content-Type: text/html; charset=ISO-8859-1
+P3P: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+Server: gws
+X-XSS-Protection: 0
+X-Frame-Options: SAMEORIGIN
+Set-Cookie: 1P_JAR=2021-02-01-09; expires=Wed, 03-Mar-2021 09:40:20 GMT; path=/; domain=.google.com; Secure
+Set-Cookie: NID=208=nolf3IX3q7ldCrX8168Xx5hcKL-_AE29SIG4773u9BQvCMxSkNntNp5TGGkgjERGG6zkzCfMGtNzrWqc2ttn622HmLjpjLuZfarp9Q_hOlrFeqaBAErP4uQFtBT8hz7SBnD0QuLLTm3XUOnVcY-lPOYZoOAFf7al9fvIYoTgHfY; expires=Tue, 03-Aug-2021 09:40:20 GMT; path=/; domain=.google.com; HttpOnly
+Accept-Ranges: none
+Vary: Accept-Encoding
+Transfer-Encoding: chunked
+
+544a
+<!doctype html><html itemscope="" itemtype="http://schema.org/WebPage" lang="tr"><head><meta content="text/html; charset=UTF-8" http-equiv="Content-Type"><meta content="/images/branding/googleg/1x/googleg_standard_color_128dp.png" itemprop="image"><title>Google</title><script nonce="IQtLM2mGGKxcYqukYTNIVA==">(function(){window.google={kEI:'hMwXYKu_NYH4U-Pqu_AI',kEXPI:'0,202199,1157210,954,5104,207,3204,10,1590,2316,383,246,5,304,1050,4414,3,66,768,5,211,2729,2394,7,3740,92,1113337,1197708,574,328985,51224,16114,17444,11240,9188,8384,4859,1361,9290,3022,4746,12841,4998,13228,2054,920,873,3599,7023,14527,236,4282,2777,919,2279,6,2796,1593,1279,2212,241,289,149,1103,840,517,1466,57,4257 [*] Exception! Exiting.
+
+
+get attığında olan 
+./bhnet.py -t localhost -p 9999
+<CTRL-D>
+<BHP:#> ls -la
+total 32
+drwxr-xr-x 4 justin staff 136 18 Dec 19:45 .
+drwxr-xr-x 4 justin staff 136 9 Dec 18:09 ..
+-rwxrwxrwt 1 justin staff 8498 19 Dec 06:38 bhnet.py
+-rw-r--r-- 1 justin staff 844 10 Dec 09:34 listing-1-3.py
+<BHP:#> pwd
+/Users/justin/svn/BHP/code/Chapter2
+<BHP:#>
+
+justin$ ./bhnet.py -l -p 9999 -c
+ bunalr da atamam
+ ------------------------------PROXY
+ wireshark engelleneceği için bu proxy yapmak iyidir.
+ bazı komut satırı argümanlarını alır ve ardından bağlantıyı dinleyen bir sunucu döngüsü oluşuturur. yeni bir bağlantı talebi geldiğinde onu verti akışının her iki tarafına da bitlerin tüm gönerimini ve alımını yapan proxy_handlera teslim eder.
+ Proxy kodunun geri kalanı basittir: daha fazla veri bulunmayana kadar sürekli olarak yerelden okuruz, işleriz, uzaklara göndeririz, uzaktan okuruz, işler ve yerele göndeririz (5).
+ Bu, proxy'mizi tamamlamak için gereken son kod parçacığıdır. İlk olarak, paket ayrıntılarını hem onaltılık değerleriyle hem de ASCII ile yazdırılabilir karakterlerle çıkaracak olan onaltılık döküm işlevimizi u oluşturuyoruz. Bu, bilinmeyen protokolleri anlamak, kullanıcı kimlik bilgilerini düz metin protokollerinde bulmak ve çok daha fazlası için kullanışlıdır. Receive_from fonksiyonu (2) hem yerel hem de uzak verileri almak için kullanılır ve biz sadece kullanılacak soket nesnesini iletiriz. Varsayılan olarak, iki saniyelik bir zaman aşımı seti vardır; bu, trafiği diğer ülkelere veya kayıplı ağlara yönlendiriyorsanız agresif olabilir (gerektiği kadar zaman aşımını artırın). İşlevin geri kalanı, bağlantının diğer ucunda daha fazla veri algılanana kadar veri almayı idare eder. Son iki işlevimiz (3) (4), proxy’nin herhangi bir ucuna giden trafiği değiştirmenize olanak tanır. Bu yararlı olabilir, örneğin, düz metin kullanıcı kimlik bilgileri gönderiliyorsa ve bir uygulamadaki ayrıcalıkları justin yerine admin geçerek yükseltmeyi denemek istiyorsanız. Artık proxy'mizi kurduğumuza göre, bir deneme yapalım.
+ Bunu bir ftp sunucusunda test edelim
+ sudo python my_proxy.py 127.0.0.1 21 ftp.target.ca 21 True
+[sudo] password for neciden: 
+
+--------------------------------------SSH with Paramiko
+. Python'da, kendi SSH istemcinizi veya sunucunuzu oluşturmak için ham soketler ve biraz şifreleme sihri kullanabilirsiniz - ancak yeniden kullanabileceğiniz zaman neden yaratasınız? PyCrypto kullanan Paramiko, SSH2 protokolüne basit erişim sağlar.
+Bu kitaplığın nasıl çalıştığını öğrenmek için, bir SSH sisteminde bir bağlantı kurmak ve bir komut çalıştırmak için Paramiko'yu kullanacağız, bir Windows makinesinde uzak komutları çalıştırmak için bir SSH sunucusu ve SSH istemcisi yapılandıracağız ve son olarak ters tünel demosunu çözeceğiz. BHNET'in proxy seçeneğini çoğaltmak için Paramiko'da bulunan dosya.
+
+pip install paramiko python için ssh2 modülüdür
+Paramiko'nun parola kimlik doğrulaması yerine (veya ek olarak) anahtarlarla (2) kimlik doğrulamasını desteklediğine dikkat edin. Gerçek bir etkileşimde SSH anahtarı kimlik doğrulamasının kullanılması şiddetle tavsiye edilir, ancak bu örnekte kullanım kolaylığı için geleneksel kullanıcı adı ve şifre kimlik doğrulamasına bağlı kalacağız.
+bağlantı ku
+Öyleyse, temelleri tamamladıktan sonra, komut dizimizi SSH üzerinden Windows istemcimizde çalıştırılan komutları destekleyecek şekilde değiştirelim. Elbette, normalde SSH kullanırken, bir SSH sunucusuna bağlanmak için bir SSH istemcisi kullanırsınız, ancak Windows kullanıma hazır bir SSH sunucusu içermediğinden, bunu tersine çevirmemiz ve SSH sunucumuzdan komutlar göndermemiz gerekir. SSH istemcisine.
+python3  bh_sshcmd.py  artık
+
+şimdi bunu windowsta çalışacak şekilde düzenleyelim. Elbette normlade ssh kullanırken bir ssh sunucusuna bağlanmak için bir ssh istemcisi kullanırsınız ancak windows kullanıma hazır bir ssh sunucu içermediğinden bunu tersine çevirmemiz ve sshdan komutlar göndermemiz gerekir. 
+
+İlk birkaç satır son programımız gibidir ve yeni şeyler while True: döngüsünde başlar. Ayrıca gönderdiğimiz ilk komutun ClientConnected olduğuna dikkat edin. SSH bağlantısının diğer ucunu oluşturduğumuzda neden anlayacaksınız
+
+Bu program, SSH istemcimizin (komutları çalıştırmak istediğimiz yer) bağlandığı bir SSH sunucusu oluşturur. Bu, Python ve Paramiko'nun yüklü olduğu bir Linux, Windows veya hatta OS X sistemi olabilir.
+Bu örnek için, Paramiko demo dosyalarında (1) bulunan SSH anahtarını kullanıyoruz. Bölümde daha önce yaptığımız gibi bir yuva dinleyicisi (3) başlatıyoruz ve ardından onu SSHinize (2) ve kimlik doğrulama yöntemlerini (4) yapılandırıyoruz. Bir istemci doğrulandığında (5) ve bize ClientConnected mesajını (6) gönderdiğinde, bh_sshserver'a yazdığımız herhangi bir komut bh_sshclient'e gönderilir ve bh_sshclient üzerinde çalıştırılır ve çıktı bh_sshserver'a döndürülür. Bir deneyelim.
+
+bunalr olmadı dön!!!
+
+
+
+ 

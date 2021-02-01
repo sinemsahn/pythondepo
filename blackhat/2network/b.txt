@@ -1,0 +1,10 @@
+ssh Tunelling den devam bir öncekini yapamadım
+burada target networke gitmek için ssh istemcinden hedefin web servera gitmek için önce ssh servera giderim. 
+bu mantık güzel ama pek çok windows sistemi ssh sunucu yok
+bunda ters ssh tünel bağlantısı yapılandıraibliriz. bu durumda kendi ssh sunucumuza windows istemciisnden olğan şekilde bağlanıyoruz. 
+yani içten dışa bağlantı çünk ü dıştaki windows olduğundan
+bu ssh bağlantısı ile SSH sunucusunda yerel ana bilgisayara ve bağlantı noktasına tünellenecek bir uzak bağlantı noktası da belirtiyoruz
+Bu yerel ana bilgisayar ve bağlantı noktası, örneğin, 3389 numaralı bağlantı noktasını, uzak masaüstü kullanarak dahili bir sisteme veya Windows istemcisinin erişebileceği başka bir sisteme (örneğimizdeki web sunucusu gibi) erişmek için açığa çıkarmak için kullanılabilir.
+Paramiko'da iki ana iletişim yöntemi vardır: şifreli bağlantının kurulmasından ve sürdürülmesinden sorumlu olan aktarım ve şifreli aktarım oturumu üzerinden veri göndermek ve almak için bir sock gibi davranan kanal.
+
+ 
