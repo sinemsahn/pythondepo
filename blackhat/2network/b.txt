@@ -7,4 +7,108 @@ bu ssh bağlantısı ile SSH sunucusunda yerel ana bilgisayara ve bağlantı nok
 Bu yerel ana bilgisayar ve bağlantı noktası, örneğin, 3389 numaralı bağlantı noktasını, uzak masaüstü kullanarak dahili bir sisteme veya Windows istemcisinin erişebileceği başka bir sisteme (örneğimizdeki web sunucusu gibi) erişmek için açığa çıkarmak için kullanılabilir.
 Paramiko'da iki ana iletişim yöntemi vardır: şifreli bağlantının kurulmasından ve sürdürülmesinden sorumlu olan aktarım ve şifreli aktarım oturumu üzerinden veri göndermek ve almak için bir sock gibi davranan kanal.
 
+snifferın teme amacı bir hedef ağda UDP tabanlı ana bilgisyar keşfi gerçekleştirmektir.
+Belirli bir IP adresinde aktif bir ana bilgisayar olup olmadığını belirlemek için kapalı UDP bağlantı noktalarını ele alırken çoğu işletim sisteminin bilinen bir davranışını kullanırız. Bir ana bilgisayardaki kapalı bir bağlantı noktasına bir UDP veri birimi gönderdiğinizde, bu ana bilgisayar genellikle bağlantı noktasının erişilemez olduğunu belirten bir ICMP mesajı gönderir. Bu ICMP mesajı, canlı bir ana bilgisayar olduğunu gösterir çünkü UDP datagramına bir yanıt almadıysak ana bilgisayar olmadığını varsayacağız. Muhtemelen kullanılmayacak bir UDP bağlantı noktası seçmemiz önemlidir ve maksimum kapsama alanı için, aktif bir UDP hizmetine çarpmamamız için birkaç bağlantı noktasını inceleyebiliriz.
+
+Neden UDP? Mesajı tüm bir alt ağa püskürtmek ve ICMP yanıtlarının buna göre gelmesini beklemek ek yük gerektirmez. Bu, çeşitli ağ protokol başlıklarının kodunun çözülmesi ve analiz edilmesine giden işin çoğu ile oluşturmak için oldukça basit bir tarayıcıdır. Bu ana tarayıcıyı, kurumsal bir ortamda kullanma olasılığını en üst düzeye çıkarmak için hem Windows hem de Linux için uygulayacağız.
+
+Ayrıca, uygun bir ağ saldırı yüzeyine sahip olup olmadıklarını belirlemek için keşfettiğimiz herhangi bir ana bilgisayarda tam Nmap bağlantı noktası taramalarını başlatmak için tarayıcımıza ek mantık da yerleştirebiliriz.
+
+-----------------Packet Sniffing on windows and Linux
+ilk örnegimizde ham soket algılayıcısı raw socket snifferı kurduk tek bir pakette okuduk ve sonra çıktık
+Windows ve Linux arasındaki fark, Windows'un protokolden bağımsız olarak gelen tüm paketleri koklamamıza izin vermesidir, oysa Linux bizi ICMP'yi kokladığımızı belirtmeye zorlar.
+Windows'ta yönetici ayrıcalıkları veya Linux'ta kök gerektiren rastgele modu kullandığımızı unutmayın. Karışık mod, ağ kartının gördüğü tüm paketleri, belirli ana makinenize yönelik olmayanları bile koklamamıza olanak tanır. Daha sonra, yakalanan paketlerimizdeki IP başlıklarını içeren bir soket seçeneği (3) belirledik.
+Bir sonraki adım (3), Windows kullanıp kullanmadığımızı belirlemektir ve eğer öyleyse, rastgele modu etkinleştirmek için ağ kartı sürücüsüne bir IOCTL gönderme ek adımını gerçekleştiriyoruz. Windows'u bir sanal makinede çalıştırıyorsanız, büyük olasılıkla konuk işletim sisteminin rastgele modu etkinleştirdiğine dair bir bildirim alırsınız; elbette buna izin vereceksin.
+. Bu sadece koklama kodumuzun özünün çalıştığından emin olmak için test etmek içindir. Tek bir paket koklandıktan sonra, Windows için tekrar test yapıyoruz ve komut dosyasından çıkmadan önce rasgele y modunu devre dışı bırakıyoruz.
+Nostarch.com için gönderilen ilk ICMP ping isteğini yakaladığımızı görebilirsiniz (nostarch.com dizesinin görünümüne göre). Bu örneği Linux'ta çalıştırıyorsanız, yanıtı nostarch.com'dan alırsınız. Bir paketi koklamak fazla kullanışlı değildir, bu yüzden daha fazla paketi işlemek ve içeriklerini çözmek için bazı işlevler ekleyelim.
+
+Çalıştırmak için
+*python sniffer.py
+*ping nostarch.com
+host kendi eth0 a çektim ve
+('E\x00\x00T\xef\xef\x00\x00\x80\x01Eih\x14\xd0\x03\xc0\xa8\x0c\x90\x00\x00@\\\x10\x05\x00\x01$\x82\x19`\x00\x00\x00\x00\xae\xe8\x04\x00\x00\x00\x00\x00\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !"#$%&\'()*+,-./01234567', ('104.20.208.3', 0))
+
+dönen sonuç :)
+-----------------------------Decoding the IP Layer:-----------
+Bilgi ikili biçimde paketlenmiştir ve yukarıda gösterildiği gibi anlaşılması zordur.
+şimdi bir paketten tararlı bilgiler çıkaraiblmek için ip paketleirni incelemeye bakalım
+Tüm IP başlığının kodunu çözeceğiz (Seçenekler alanı hariç) ve protokol türünü, kaynağı ve hedef IP adresini çıkaracağız. C benzeri bir yapı oluşturmak için Python ctypes modülünü kullanmak, IP başlığını ve üye alanlarını işlemek için kolay bir biçime sahip olmamızı sağlayacaktır. Öncelikle, bir IP başlığının neye benzediğinin C tanımına bir göz atalım.
+--
+struct ip {
+    u_char ip_hl:4;
+    u_char ip_v:4;
+    u_char ip_tos;
+    u_short ip_len;
+    u_short ip_id;
+    u_short ip_off;
+    u_char ip_ttl;
+    u_char ip_p;
+    u_short ip_sum;
+    u_long ip_src;
+    u_long ip_dst;
+}
+--
+ Bu C veri türlerini IP başlık değerlerine nasıl eşleyeceğimiz ile ilgilidir.
+ Ip decoding için kod yazmaya başlayalım.
+ ----------------------sniffer_ip_header_decode.py----------
+ ctypes kütüphanesi c uyumlu veri türleri sağlar ve dll'lerde veya paylaşılan
+ kitaplıklarda işlevlerin çağrılmasına izin verir. 
+ ilk adım, alınan tamponun ilk 20 batını uygun bir IP başlığına eşleyecek bir Python ctype yapısını tanımlamaktadır. 
+ IP sınıfının __new__ yöntemi basitçe ham bir bufferı alır(bu durumda ağdan aldığımızı şeyi )ve ondan yapıyı oluşturur.
+ __init__ yöntemi çağrılığında new__ arabelliği işlemeyi zaten  bitirmiştir. 
+ __init__ içind ekullanımd aolan protokol ve ip adresleri için insanlar tarafından okunabilir bazı çıktılar sağlamak için biraz temizlik yapar.
+ en son ki try içinde yaptıklarımız
+ en son ki if içinde artık bu fonksiyonları bu class içindeki kullanabiliriz
+ yeni basılmış ip yapımızla artık paketleri sürekli olarak okumak ve bilgilerini ayrıştırmak için mantığa sahibiz.
+ İlk adım try içindeki paketi okumak ve ardından ip yapımızı başlatmak için ilk 20 baytı geçmek 
+ ardından yakaladığımız bilgileri yazdırıyoruz.Hadi deneyelim.
+ Bunun denemesini windowsta yaparsam tcp udp ve icmp paketlerini görebilirim.linux ve windowsta ayrı çıktılara bakalım.
  
+ Şimdi bir icmp paketini decod edelim.
+ biraz raw socket yapıp destlerde ayrıştırmada değişiklik yaptım ve linuxta sonuç tamama
+ Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Windows: geçtim şimdilik :)
+---------------------Decoding ICMP--------------
+ICMP mesajalrının içerikleri büyük ölçüde değişebilir, ancak her mesajda tutarlı kalan üç öğe bulunur: type code and checksum fields sağlama toplamı alanlar
+Tür ve kod alanları, alıcı ana bilgisayara ne tür ICMP mesajının geldiğini söyler, bu da daha sonra nasıl doğru bir şekilde çözüleceğini belirler.
+scannerin tarayıcımızın amacı için tür değeri 3 ve kod değeri 3 arıyoruz. Bu ICMP mesajlarının Hedef ulaşılamaz Unreachable class of ICMP messages karşılık gekir ve 3 kod değeri , Bağlantı Noktası Ulaşılamaz posrt unreacable error hatasına neden olduğunu gösterir. Hedef Ulaşılamaz destination unrachable ıcmp messages icmp mesajının diyagramı için şekle bakalım.
+ilk 8 bit type ve ikinci 8 bit icmp kodumuzu içerir. dikkat eidlmesi gereken ilginç bir nokta bir ana iblgisyar bu icmp mesajlarından birini gönderdiğinde aslında yanıtı oluşturan kaynak mesajın ip başlığını içermesidir.
+tarayıcımızın icmp yanıtını oluşturduğundan emin olmak için gönderilen orijinal datagramın 8 baytını iki kez kontrol edeceğimizi de görebiliriz. Bunu yapmak için tarayıcımızın gönderdiği magic string çıkarmak için alınan arabelleğin son 8 baytını incelemeiyiz . icmp paketleirnin kodunu çözem özelliğini dahil etmek için önceki algılayıcımıza biraz daha kod ekleyelim önceki dosyamızı değiştieceğiz.
+
+bu kodu tipik ping testimizile hızlı bir şekilde çalıştırısak çıktımız aşağıdaki gibi olur:
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+Protocol: ICMP 142.250.184.142 -> 192.168.12.144
+^CICMP -> Type: 0 Code: 0
+
+Bu ping yanıtlarının (ICMP Echo )yanıtlarının doğru şekilde alındığını ve kodlarının çözüldüğünü gösterir. Artık UDP datagramlarını göndermek ve sonuçlarını yorumlamak için son mantık parçasınıuygulmaaya hazırız.
+Şimdi, ana bilgisayar keşif taramamızla tüm bir alt ağı kapsayabilmemiz için netaddr modülünün kullanımını ekleyelim. "Sniffer_with_icmp.py" komut dosyanızı tarayıcı scanner.py olarak kaydedin ve aşağıdaki kodu ekleyin:
+
+Bu son kod parçasının anlaşılması oldukça kolay olmalıdır. Yanıtların orijinal olarak gönderdiğimiz UDP paketlerinden geldiğini test edebilmemiz için basit bir dizi imzası (1) tanımlıyoruz. Udp_sender işlevimiz (2), komut dosyamızın en üstünde belirttiğimiz bir alt ağı alır, bu alt ağdaki tüm IP adreslerini yineler ve UDP datagramlarını
+onları. Komut dosyamızın ana gövdesinde, ana paket kod çözme döngüsünden hemen önce, yanıtları koklama yeteneğimize müdahale etmememiz için udp_sender'ı ayrı bir iş parçacığında (3) oluştururuz. Beklenen ICMP mesajını tespit edersek, önce ICMP yanıtının geldiğinden emin olmak için kontrol ederiz.
+hedef alt ağımızdan (4). Daha sonra, ICMP yanıtının sihirli dizimize sahip olduğundan emin olmak için son kontrolümüzü gerçekleştiririz (5). Tüm bu kontroller başarılı olursa, ICMP mesajının geldiği yerin kaynak IP adresini yazdırırız. Hadi deneyelim.
+
+
+-----------NETADDR Modülü-------
+Netaddr modülü alt ağlar ve adresleme ile çalışmayı çok kolaylaştırır. Örneğin, IPNetwork nesnesini kullanarak aşağıdaki gibi basit testler çalıştırabilirsiniz:
+ip_address = "192.168.112.3"
+if ip_address in IPNetwork("192.168.112.0/24"):
+    print True
+ 
+Veya tüm bir ağa paket göndermek istiyorsanız basit yineleyiciler oluşturabilirsiniz:
+for ip in IPNetwork("192.168.112.1/24"):
+    s = socket.socket()
+    s.connect((ip, 25))
+    # send mail packets
+  Bu, bir seferde tüm ağlarla uğraşırken programlama hayatınızı büyük ölçüde kolaylaştıracaktır ve ana bilgisayar keşif aracımız için idealdir. Yüklendikten sonra devam etmeye hazırsınız.
+  Yaptığım gibi hızlı bir tarama için sonuçları geri almak sadece birkaç saniye sürdü. Bu IP adreslerini ev yönlendiricimdeki DHCP tablosuyla çapraz referans alarak, sonuçların doğru olduğunu doğrulayabildim. TCP ve UDP paketlerinin kodunu çözmek için bu bölümde öğrendiklerinizi kolayca genişletebilir ve etrafında ek araçlar oluşturabilirsiniz. Bu tarayıcı, Bölüm 7'de oluşturmaya başlayacağımız trojan çerçevesi için de kullanışlıdır.
+Bu, konuşlandırılmış bir truva atının ek hedefler arayan yerel ağı taramasına izin verir. Artık ağların yüksek ve düşük düzeyde nasıl çalıştığına dair temel bilgilere sahip olduğumuza göre, Scapy adında çok olgun bir Python kitaplığını keşfedelim.
+
+ sudo python scanner.py 
+Host Up: 192.168.12.144
+
