@@ -1,0 +1,49 @@
+pythonla w3af , sqlmap ve bir çok araç vardır.
+webde keşif ve bruteforce için araçlar yazmanın tekniklerine bakalım
+nere gitse sqlmap çoğaldı
+---The Socket Library of the Web: urllib2-----
+sovket kitaplığıyla ağ araçları yazmak gibi , web hizmetleriyle etkileşim için araçlar oluştururken urllib2 kitaplığını kullanacaksınız. 
+bir web sitesine get ataalım: get.py googlea attım verdiği olmadı
+No Starch web sitesinden ham sayfayı getirdiğimizi ve hiçbir JavaScript veya diğer istemci tarafı dillerin çalışmayacağını unutmayın. Basitçe urlopen işlevine (1) bir URL göndeririz ve bu, uzak web sunucusunun döndürdüğü gövdeyi geri okumamıza (2) izin veren dosya benzeri bir nesne döndürür.
+post veya headerları değiştirede bilirsin.
+örnek get2.py: google a attım yine :)
+
+-------Mapping Open Source Web App Installations: Açık Kaynak Web uyglaması kuruumlarını eşleme----------
+Joomla, WordPress ve Drupal gibi içerik yönetim sistemleri ve blog oluşturma platformları, yeni bir blog veya web sitesi başlatmayı basitleştirir ve paylaşılan bir barındırma ortamında veya hatta bir kurumsal ağda nispeten yaygındır. Tüm sistemlerin kurulum, yapılandırma ve yama yönetimi açısından kendi zorlukları vardır ve bu CMS paketleri bir istisna değildir. Aşırı çalışan bir sistem yöneticisi veya talihsiz bir web geliştiricisi tüm güvenlik ve kurulum prosedürlerini takip etmediğinde, bir saldırganın web sunucusuna erişim elde etmesi kolay olabilir.
+Herhangi bir açık kaynak web uygulamasını indirebildiğimiz ve dosya ve dizin yapısını yerel olarak belirleyebildiğimiz için, uzak hedefte erişilebilen tüm dosyaları arayabilen amaca yönelik bir tarayıcı oluşturabiliriz. Bu, kalan yükleme dosyalarını, .htaccess dosyalarıyla korunması gereken dizinleri ve bir saldırganın web sunucusunda bir yere tutunmasına yardımcı olabilecek diğer özellikleri kökten kaldırabilir. Bu proje aynı zamanda size büyük, iş parçacığı güvenli bir öğe yığını oluşturmamıza ve işlenecek birden çok iş parçacığı seçim öğelerine sahip olmamıza olanak tanıyan Python Queue nesnelerini kullanmayı tanıtır. Bu, tarayıcımızın çok hızlı çalışmasını sağlayacaktır. Web_app_mapper.py'yi açalım ve aşağıdaki kodu girelim:
+
+Test amacıyla Joomla 3.1.1'i Kali VM'me kurdum, ancak hızlı bir şekilde dağıtabileceğiniz veya zaten çalıştırdığınız herhangi bir açık kaynaklı web uygulamasını kullanabilirsiniz. Web_app_mapper.py'yi çalıştırdığınızda, aşağıdaki gibi çıktı görmelisiniz:
+Spawning thread: 0
+Spawning thread: 1
+Spawning thread: 2
+Spawning thread: 3
+Spawning thread: 4
+Spawning thread: 5
+Spawning thread: 6
+Spawning thread: 7
+Spawning thread: 8
+Spawning thread: 9
+[200] => /htaccess.txt
+[200] => /web.config.txt
+[200] => /LICENSE.txt
+[200] => /README.txt
+[200] => /administrator/cache/index.html
+[200] => /administrator/components/index.html
+[200] => /administrator/components/com_admin/controller.php
+[200] => /administrator/components/com_admin/script.php
+[200] => /administrator/components/com_admin/admin.xml
+[200] => /administrator/components/com_admin/admin.php
+[200] => /administrator/components/com_admin/helpers/index.html
+[200] => /administrator/components/com_admin/controllers/index.html
+[200] => /administrator/components/com_admin/index.html
+[200] => /administrator/components/com_admin/helpers/html/index.html
+[200] => /administrator/components/com_admin/models/index.html
+[200] => /administrator/components/com_admin/models/profile.php
+[200] => /administrator/components/com_admin/controllers/profile.php
+-----
+Ben çalıştırıanca directory kısmında hata veriyor
+
+----Brute-Forcing Directories and File Locations:----------Kaba Zorlayıcı Dizinler ve Dosya Konumları---------------
+
+
+

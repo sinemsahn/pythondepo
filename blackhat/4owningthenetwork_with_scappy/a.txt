@@ -1,2 +1,144 @@
 4-Owning-The Network-With-Scapy:Scapy İle Ağa Sahip Olmak:---
+scapy ile düz metin e-posta kimlik bilgilerini çalmak için koklayarak ve ardından ATP posisoning zehirleme ile ağımızdaki bir hedef makineyi zehirleyerek trafiğini koklayabilirisiniz.
+Scapyinin pcap işlemesinin http trafiğinden görüntüleri çıkarmak için nasıl genişletilebileceğini ve ardından görüntülerde insan olup olmadığını belirlemek için bunların üzerinden yüz algılama gereçkleştirebileceğini göstererek her şeyi özetleyecek.
+----Stealing Email Credentials:-------
+Scapy'nin paketleri koklamak ve içeriklerini incelemek için kullandığı arabirimi tanıyalım.SMTP, POP3 ve IMAP kimlik bilgilerini yakalamak için çok basit bir algılayıcı sniffer oluşturalım.Daha sonra algılayıcımızı Address Resoluiton Protocol Adres Çözümleme Protokolü (ARP) zehirleme poisoning Mitm attack saldırımızla birleştirerek, ağdaki diğer makinelerden kimlik bilgilerini kolayca çalabiliriz.
+Bu teknik elbette herhangi bir protokole uygulanabilir veya basitçe tüm trafiği emmek ve analiz için bir PCAP dosyasında saklamak için de uygulanabilir.
+İlk önce paketleri parçalayıp dışarı atan bir skeleton sniffer iskelet algılayıcı oluşturarak başlayalım. 
+
+sniff(filter="",iface="any",prn=function,count=N)
+
+bir filtre parametresi BPF neyi takip edeceksen oluyor.
+iface parametresi dinleyiciye hangi ağ arayüzünün koklanacağını söyler, bış bırakılırsa scappy hepsini sniff eder.
+prn paremetresi filtreyle eşleşen her paket için çağrılacak bir geri çağrı işlevini belirtir ve geri çağrı işlevi paket nesnesini tek parametresi olarak alır. 
+Count parametresi, kaç paket koklamak istediğinizi belirtir; boş bırakılırsa, Scapy süresiz olarak koklayacaktır.
+Bir paketi koklayan ve içeriğini döken basit bir sniffer yapalım:
+Daha sonra sadece e-postayla ilgili komutları koklamak için genişleteceğiz. 
+"mail_sniffer.py":
+koklanan paket belirtilen fonksiyona iletilir tek tek.
+çıktı:sudo python mail_sniffer.py
+###[ Ethernet ]### 
+  dst       = 01:00:5e:7f:ff:fa
+  src       = 00:50:56:c0:00:08
+  type      = 0x800
+###[ IP ]### 
+     version   = 4
+     ihl       = 5
+     tos       = 0x0
+     len       = 202
+     id        = 27108
+     flags     = 
+     frag      = 0
+     ttl       = 1
+     proto     = udp
+     chksum    = 0x929b
+     src       = 192.168.12.1
+     dst       = 239.255.255.250
+     \options   \
+###[ UDP ]### 
+        sport     = 52044
+        dport     = 1900
+        len       = 182
+        chksum    = 0x6f73
+###[ Raw ]### 
+           load      = 'M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: "ssdp:discover"\r\nMX: 1\r\nST: urn:dial-multiscreen-org:service:dial:1\r\nUSER-AGENT: Google Chrome/88.0.4324.104 Windows\r\n\r\n'
+
+None
+
+kitap çıktı:
+WARNING: No route found for IPv6 destination :: (no default route?)
+###[ Ethernet ]###
+dst = 10:40:f3:ab:71:02
+src = 00:18:e7:ff:5c:f8
+type = 0x800
+###[ IP ]###
+version = 4L
+ihl = 5L
+tos = 0x0
+len = 52
+id = 35232
+flags = DF
+frag = 0L
+ttl = 51
+proto = tcp
+chksum = 0x4a51
+src = 195.91.239.8
+dst = 192.168.0.198
+\options \
+###[ TCP ]###
+sport = etlservicemgr
+dport = 54000
+seq = 4154787032
+ack = 2619128538
+dataofs = 8L
+reserved = 0L
+flags = A
+window = 330
+chksum = 0x80a2
+urgptr = 0
+options = [('NOP', None), ('NOP', None), ('Timestamp', (1960913461,¬
+764897985))]
+None
+şimdi geri arama fonksiyonunu biraz değiştirelim.email ayıklama için:
+
+110 (POP3), 143 (IMAP) ve SMTP (25) (4) için hedeflenen trafiği içeren bir filtre eklemek için koklama işlevimizi değiştirdik.
+Ayrıca, 0 olarak ayarlandığında Scapy'nin paketleri bellekte tutmamasını sağlayan store adlı yeni bir parametre kullandık.
+Uzun süreli bir dinleyiciyi çalışır durumda bırakmayı planlıyorsanız, bu parametreyi kullanmak iyi bir fikirdir, çünkü büyük miktarlarda RAM tüketmezsiniz.
+Posta istemcimi bağlamaya çalıştığım sahte bir e-posta hesabından bazı örnek çıktılar:
+[*] Server: 25.57.168.12
+[*] USER jms
+[*] Server: 25.57.168.12
+[*] PASS justin
+[*] Server: 25.57.168.12
+[*] USER jms
+[*] Server: 25.57.168.12
+[*] PASS test
+------ARP Cache Poisoning with Scapy--------
+arp zehirlenmesi bir bilgisayar korsanının araç setindeki en eski ama en etkili püf noktalarından biridir. Basitçe . Basitçe söylemek gerekirse, bir hedef makineyi onun ağ geçidi haline geldiğimize ikna edeceğiz ve ağ geçidini de hedef makineye ulaşmak için tüm trafiğin bizden geçmesi gerektiğine ikna edeceğiz.
+Bir ağdaki her bilgisayar, yerel ağdaki IP adresleriyle eşleşen en son MAC adreslerini depolayan bir ARP önbelleğine sahiptir ve bu önbelleği, bu saldırıyı gerçekleştirmek için kontrol ettiğimiz girişlerle zehirleyeceğiz.
+windowsa kaliden saldıralım.kablosuza bağlı mobil cihazlar da da olur.
+yapacağımız ilk şey hedef windows makinesindeki arp önbelleğini kontrol etmektirböylece saldırımızı daha sonra eylem halinde görebiliriz.
+windowsda: arp -a ile bakarsın
+Bunu not alacağız çünkü saldırı devam ederken ARP önbelleğini görebilir ve ağ geçidinin kayıtlı MAC adresini değiştirdiğimizi görebiliriz. Artık ağ geçidini ve hedef IP adresimizi bildiğimize göre, ARP zehirleme komut dosyamızı kodlamaya başlayalım.
+Ana iş parçacığımızda, yalnızca hedef IP adresimiz için trafiği yakalamak üzere bir BPF filtresi kullanarak önceden belirlenmiş miktarda paketi yakalayacak bir algılayıcı (4) başlatıyoruz.
+Tüm paketler yakalandığında, bunları (5) bir PCAP dosyasına yazarız, böylece onları Wireshark'ta açabilir veya gelecek görüntü oyma komutumuzu bunlara karşı kullanabiliriz.
+Saldırı bittiğinde, ağı ARP zehirlenmesi gerçekleşmeden önceki haline geri döndürmekten sorumlu olan restore_target işlevimizi (6) çağırıyoruz.
+Yani bu gerçek saldırının eti ve patatesleri. Restore_target işlevimiz, ağ geçidi ve hedef makinelerin ARP önbelleklerini sıfırlamak için uygun ARP paketlerini ağ yayın adresine (1) gönderir. Ayrıca çıkış için ana iş parçacığına (2) bir sinyal gönderiyoruz, bu, zehirlenme dizimizin bir sorunla karşılaşması veya klavyenizde ctrl-C tuşlarına basmanız durumunda faydalı olacaktır. Get_mac işlevimiz, kendisiyle ilişkili MAC adresini çözmek için belirtilen IP adresine bir ARP isteği göndermek için srp (paket gönderme ve alma) işlevini (3) kullanmaktan sorumludur. Poison_target işlevimiz, hem hedef IP'yi (4) hem de ağ geçidini (5) zehirlemek için ARP istekleri oluşturur. Hem ağ geçidini hem de hedef IP adresini zehirleyerek, hedefin içine ve dışına akan trafiği görebiliriz. Saldırımız süresince ilgili ARP önbellek girişlerinin zehirli kalmasını sağlamak için bu ARP isteklerini (6) bir döngü içinde yaymaya devam ediyoruz. Bu kötü çocuğu bir tur atalım!
+Artık ARP önbelleğinin artık ağ geçidinin saldıran bilgisayarla aynı MAC adresine sahip olduğu yerde zehirlendiğini görebilirsiniz. 172.16.1.64'ten saldırdığım ağ geçidinin üzerindeki girişte açıkça görebilirsiniz. Saldırı paketleri yakalamayı bitirdiğinde, komut dosyanızla aynı dizinde bir arper.pcap dosyası görmelisiniz. Elbette, hedef bilgisayarı yerel bir Burp örneği üzerinden tüm trafiğini proxy yapmaya zorlamak veya başka birçok kötü şey yapmak gibi şeyler yapabilirsiniz.
+PCAP işlemeyle ilgili bir sonraki bölüm için o PCAP'ye bağlanmak isteyebilirsiniz - ne bulacağınızı asla bilemezsiniz!
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sudo su ile yap
+sudo python arper.py
+arpı kendim denedim arpspoof ile ve ilk önce virtual edit ile sanalları bridge çektim
+sonra 1.106 ile gateway kullanarak yaptım
+arp -a dediğimde 3 ipde aynı mac oldu önc eöyle değildi 
+sonra işlem bitince google istek attım olamdı ctrl c dediğime tmeizledi maci
+googlea erişim sağlayabildim
+gatewayi benim macle aynı yapıyorki giden ağ istekleri benden çıkıyor bende görebiliyorum
+[sudo] password for wild: 
+[*] Setting up eth0
+[*] Gateway 192.168.1.1 is at 5c:63:bf:98:6b:fd
+[*] Target 192.168.1.106 is at 80:fa:5b:69:a4:6d
+[*] Starting sniffer for 1000 packets
+[*] Beginning the ARP poison. [CTRL-C to stop]
+^C[*] Restoring target...
+[*] Restoring target...
+arper.py sonucu ve arper.pcap çıktısı verir.
+-------------PCAP Processing---------------
+Wireshar ve network minner gibi diğer araçlar paket yakalama dosylarını etkileşimli olarak keşfetmek için harkiadır.Pytyhon ve scapy ile pcapleri incelemk istediğimizde ayrı. 
+görüntü dosyalrını http trafiğinden çıkarmaya çalışalım.
+görüntüleri seçmek için kullanılacak olan opencv,2 yi kullanacağız.
+pcap dosyalrını oluşturmak için önceki arp posinoning komutunu kullanaabiliriz veya aARP zehirleme algılayıcısını hedef göz atarken görüntülerin anında yüz algılaması için genişletebilirsiniz
+pcap analizi için kod yazalım "pic_carver.py"
+opencv python bağlamlarını kullanarak görüntüyü okutyabilir ve ardından yüzleri öne bakan yönde algılamak için önceden eğtilmiş sınıflandırcı uygulayablirsiniz.
+Profil (yanlamasına) yüz algılama, eller, meyve ve kendi kendinize deneyebileceğiniz diğer birçok nesne için sınıflandırıcılar vardır. Algılama çalıştırıldıktan sonra, görüntüde yüzün algılandığı yere karşılık gelen dikdörtgen koordinatlarını döndürecektir.
+Daha sonra bu alanın (3) üzerine gerçek bir yeşil dikdörtgen çizeriz ve ortaya çıkan görüntüyü (4) yazarız. Şimdi tüm bunları Kali sanal makinenizin içinde bir tur atalım
+pcap dosyamda hata verdi o yüzden geçtim.
+Elbette bu örneği, PCAP'lerdeki oyulmuş görüntülere karşı kullanmanın ötesine taşıyabilir ve sonraki bölümlerde açıklanan web tarama ve ayrıştırma teknikleriyle birlikte kullanabilirsiniz.
+:)
+
+
+
+
+
 
