@@ -45,5 +45,100 @@ Ben çalıştırıanca directory kısmında hata veriyor
 
 ----Brute-Forcing Directories and File Locations:----------Kaba Zorlayıcı Dizinler ve Dosya Konumları---------------
 
+Bir web sitesini taramak için burpteki bir snipder gibi bir şeye ihtiyacınız olacak. Biz burada içerikleri siteyi bilmeden taramak için bruteforce tekniğindden yararlanacağız.
+DirBuster project1 veya SVNDigger 2 gibi yaygın kaba zorlayıcılardan kelime listelerini kabul edecek ve hedef web sunucusunda erişilebilen dizinleri ve dosyaları keşfetmeye çalışacak basit bir araç geliştireceğiz.
+önce denemeler için bir liste queue oluşturmalı. 
+content_bruter.py:
+worlist okur ve her satırı yinelemeye başlar. Ağ bağlantımız kesilirse veya hedef site çökerse, kaba kuvvet oturumunu devam ettirmemize izin veren bazı yerleşik işlevlere sahibiz.
+Tüm dosya ayrıştırıldığında gerçek bruteforce işlevimizde kullanmak için kelimelerle dolu bir queue döndürürüz. 
+Kaba zorlama senaryomuzda bazı temel işlevlerin mevcut olmasını istiyoruz. İlki, istekte bulunurken test edilecek bir uzantı listesi uygulama yeteneğidir. Bazı durumlarda, örneğin doğrudan / admin'i değil, admin.php, admin.inc ve admin.html'yi de denemek istersiniz.
+dir_bruter: kaba zorlama için kullanılacak sözcüklerle ve test edilecek isteğe bağlı dosya uzantıları listesiyle doldurulmuş bir Queue nesnesini kabul eder.
+Burada, normal programlama dili uzantılarının yanı sıra .orig ve .bak gibi uzantıları kullanmayı düşünmek faydalı olabilir.!!!!!
+benim anladığımdan diğerinin wordlistini alıp uzantı varsa ekleyip deniyor
+[200] => http://testphp.vulnweb.com/CVS/
+[200] => http://testphp.vulnweb.com/admin/
+[200] => http://testphp.vulnweb.com/index.php
+[200] => http://testphp.vulnweb.com/index.bak
+[200] => http://testphp.vulnweb.com/search.php
+[200] => http://testphp.vulnweb.com/login.php
+[200] => http://testphp.vulnweb.com/login.php
+[200] => http://testphp.vulnweb.com/images/
+[200] => http://testphp.vulnweb.com/index.php
+[200] => http://testphp.vulnweb.com/logout.php
+[200] => http://testphp.vulnweb.com/categories.php
+[200] => http://testphp.vulnweb.com/404.php
+[200] => http://testphp.vulnweb.com/categories.php
+[200] => http://testphp.vulnweb.com/signup.php
+[200] => http://testphp.vulnweb.com/comment.php
+daha devam ediyordu durdurdum. :)
+-------------Brute-Forcing HTML Form Authentication---------------
+joomla: bir cms dir.
+Joomla'yı kaba kuvvetle zorlamak için, karşılanması gereken iki gereksinimimiz var: şifre girişimini göndermeden önce giriş formundan giriş jetonunu alın ve urllib2 oturumumuzda çerezleri kabul ettiğimizden emin olun. Giriş formu değerlerini ayrıştırmak için yerel Python sınıfı HTMLParser'ı kullanacağız. Bu aynı zamanda urllib2'nin kendi hedefleriniz için takım oluştururken kullanabileceğiniz bazı ek özelliklerinin iyi bir kasırga turu olacak.
+http://<yourtarget>.com/administrator/.: joomlanın logini
+---------------
+<form action="/administrator/index.php" method="post" id="form-login"
+class="form-inline">
+<input name="username" tabindex="1" id="mod-login-username" type="text"
+class="input-medium" placeholder="User Name" size="15"/>
+<input name="passwd" tabindex="2" id="mod-login-password" type="password"
+class="input-medium" placeholder="Password" size="15"/>
+<select id="lang" name="lang" class="inputbox advancedSelect">
+<option value="" selected="selected">Language - Default</option>
+<option value="en-GB">English (United Kingdom)</option>
+</select>
+<input type="hidden" name="option" value="com_login"/>
+<input type="hidden" name="task" value="login"/>
+<input type="hidden" name="return" value="aW5kZXgucGhw"/>
+<input type="hidden" name="1796bae450f8430ba0d2de1656f3e0ec" value="1" />
+</form>
+-------------
+bölye forma baktığımzda önemli bilgiler öğreniriz Birincisi, formun /administrator/index.php yoluna HTTP POST olarak gönderilmesidir. Sonraki, form gönderiminin başarılı olması için gereken tüm alanlardır. Özellikle, son gizli alana bakarsanız, ad özelliğinin uzun, rastgele bir dizeye ayarlandığını görürsünüz. Bu, Joomla'nın kaba zorlamayı önleme tekniğinin temel parçasıdır. Bu rasgele dizge, geçerli kullanıcı oturumunuza göre kontrol edilir, bir tanımlama bilgisinde saklanır ve doğru kimlik bilgilerini oturum açma işlem komut dosyasına aktarsanız bile, rastgele belirteç yoksa, kimlik doğrulama başarısız olur. Bu, Joomla'ya karşı başarılı olmak için kaba kuvvetlendiricimizde aşağıdaki istek akışını kullanmamız gerektiği anlamına gelir:
+1. Oturum açma sayfasını alın ve döndürülen tüm çerezleri kabul edin.
+2. HTML'deki tüm form öğelerini ayrıştırın.
+3. Kullanıcı adını ve / veya parolayı sözlüğümüzden bir tahmine ayarlayın.
+4. Tüm HTML form alanları ve depolanan tanımlama bilgileri dahil olmak üzere oturum açma işleme komut dosyasına bir HTTP POST gönderin.
+5. Web uygulamasına başarıyla giriş yapıp yapmadığımızı test edin.
+testleri deneme amaçlı yap .
+joomla_killer.py:
+HMTLPARSER101:
+HTMLParser sınıfını kullanırken uygulayabileceğiniz üç birincil yöntem vardır: handle_starttag, handle_endtag ve handle_data. Handle_starttag işlevi, bir açılış HTML etiketiyle her karşılaşıldığında çağrılır ve bunun tersi, bir kapanış HTML etiketiyle her karşılaşıldığında çağrılan handle_endtag işlevi için de geçerlidir. Handle_data işlevi, etiketler arasında ham metin olduğunda çağrılır. Her işlev için işlev prototipleri, aşağıdaki gibi biraz farklıdır:
+handle_starttag(self, tag, attributes)
+handle_endttag(self, tag)
+handle_data(self, data)
+Bunu vurgulamak için hızlı bir örnek:
+<title>Python rocks!</title>
+handle_starttag => tag variable would be "title"
+handle_data => data variable would be "Python rocks!"
+handle_endtag => tag variable would be "title"
+HTMLParser sınıfının bu çok temel anlayışıyla, formları ayrıştırmak, örümcek ağı oluşturmak için bağlantılar bulmak, veri madenciliği amacıyla tüm saf metni çıkarmak veya bir sayfadaki tüm resimleri bulmak gibi şeyler yapabilirsiniz.
+kitap:Kali sanal makinenize Joomla yüklemediyseniz, şimdi yüklemelisiniz. Hedef sanal makinem 92.168.112.131'de ve popüler bir kaba kuvvet ve kırma araç seti olan Cain ve Abel 3 tarafından sağlanan bir kelime listesi kullanıyorum. Joomla kurulumunda yönetici olarak kullanıcı adını ve justin şifresini önceden ayarladım, böylece çalıştığından emin olabilirim. Daha sonra justin'i cain.txt wordlist dosyasına 50 kadar giriş ekledim. Komut dosyasını çalıştırırken aşağıdaki çıktıyı alıyorum
+$ python2.7 joomla_killer.py
+Finished setting up for: admin
+Trying: admin : 0racl38 (306697 left)
+Trying: admin : !@#$% (306697 left)
+Trying: admin : !@#$%^ (306697 left)
+--snip--
+Trying: admin : 1p2o3i (306659 left)
+Trying: admin : 1qw23e (306657 left)
+Trying: admin : 1q2w3e (306656 left)
+Trying: admin : 1sanjose (306655 left)
+Trying: admin : 2 (306655 left)
+Trying: admin : justin (306655 left)
+Trying: admin : 2112 (306646 left)
+[*] Bruteforce successful.
+[*] Username: admin
+[*] Password: justin
+[*] Waiting for other threads to exit...
+Trying: admin : 249 (306646 left)
+Trying: admin : 2welcome (306646 left)
+
+
+
+BUNUN UYGULAMASINI SONRA YAP!!
+
+
+
+
+
 
 

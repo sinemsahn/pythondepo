@@ -1,0 +1,13 @@
+Burp Suite'in son sürümleri, Extensions adlı kendi araçlarınızı Burp'a ekleme yeteneğini içerir. Python, Ruby veya saf Java kullanarak, Burp GUI'ye paneller ekleyebilir ve Burp Suite'e otomasyon teknikleri oluşturabilirsiniz.
+İlk uzantı, Burp Intruder'da çalıştırılabilecek bir mutasyon fuzzer oluşturmak için bir tohum olarak Burp Proxy'den alınan bir HTTP isteğini kullanmamızı sağlayacaktır. İkinci uzantı, hedef sitemizle aynı IP adresinde bulunan tüm sanal ana bilgisayarların yanı sıra hedef etki alanı için tespit edilen tüm alt etki alanlarını bize göstermek için Microsoft Bing API ile arayüz oluşturacaktır.
+İşlevselliği genişletmeyle ilgili bazı temel bilgileri ele alacağım, ancak API belgelerini kendi uzantılarınızı geliştirmek için bir kılavuz olarak nasıl kullanacağınızı da göstereceğim.
+burp kur
+Sonraki adım Jython (Java ile yazılmış bir Python uygulaması) bağımsız JAR dosyasını almaktır; Burp'u buna işaret edeceğiz. Bu JAR dosyasını, kitabın kodunun geri kalanıyla birlikte (http://www.nostarch.com/blackhatpython/) No Starch sitesinde bulabilir veya http://www.jython.org/ downloads resmi sitesini ziyaret edebilirsiniz. .html ve Jython 2.7 Bağımsız Yükleyiciyi seçin. Adın sizi aldatmasına izin vermeyin; bu sadece bir JAR dosyası. JAR dosyasını Masaüstünüz gibi hatırlanması kolay bir konuma kaydedin. Ardından, bir komut satırı terminali açın ve Burp'u şu şekilde çalıştırın:
+:java -XX:MaxPermSize=1G -jar burpsuite_pro_v1.6.jar
+. Şimdi Burp'u Jython yorumlayıcımıza yönlendirelim. Extender sekmesine ve ardından Seçenekler sekmesine tıklayın. Python Ortamı bölümünde, Jython JAR dosyanızın konumunu Şekil 6-2'de gösterildiği gibi seçin. Seçeneklerin geri kalanını kendi haline bırakabilirsiniz ve ilk uzantımızı kodlamaya başlamaya hazır olmalıyız. Hadi sallayalım
+
+
+----Burp Fuzzing----
+Tipik olarak, tüm istekleri Proxy'yi kullanarak yakalarsınız ve ilginç bir isteğin geçtiğini gördüğünüzde, onu başka bir Burp aracına gönderirsiniz.
+Özellikle, bir Intruder saldırısı sırasında fuzzing web isteklerine baktığımız için IntruderPayloadGeneratorFactory ve IIntruderPayloadGenerator sınıflarını görüyorum. IIntruderPayloadGeneratorFactory sınıfı için belgelerin neler söylediğine bir göz atalım:
+
