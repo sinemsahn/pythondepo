@@ -1,0 +1,47 @@
+config-> her bir trojan için configeri tutar.
+Truva atlarını dağıtırken, her birinin farklı görevler gerçekleştirmesini istersiniz ve her truva atı benzersiz yapılandırma dosyasını kontrol eder.
+
+Modüller modulesdizini,-> truva atının alıp yürütmesini istediğiniz herhangi bir modüler kodu içerir. Truva atımızın kitaplıkları doğrudan GitHub depomuzdan içe aktarmasına izin vermek için özel bir içe aktarma saldırısı uygulayacağız. Bu uzaktan yükleme özelliği, üçüncü taraf kitaplıklarını GitHub'da saklamanıza da olanak tanır, böylece her yeni işlev veya bağımlılık eklemek istediğinizde truva atınızı sürekli olarak yeniden derlemeniz gerekmez. 
+
+Veri data dizini,-> truva atının toplanan verileri, tuş vuruşlarını, ekran görüntülerini vb. Kontrol edeceği yerdir. Şimdi bazı basit modüller ve örnek bir yapılandırma dosyası oluşturalım. 
+
+Şimdi basit modüüler yapalım: modül dizini içine dirlister.py:
+environment.py
+Şimdi bu kodlara githuba atalım ki truva atımız kullansın.
+Yüz tane konuşlandırılmış truva atınız varsa, GitHub deponuza yeni modüller gönderebilir ve yeni modülünüzü truva atının yerel sürümü için bir yapılandırma dosyasında etkinleştirerek bunları QA yapabilirsiniz. Bu şekilde, uzaktaki truva atlarınızdan birinin kodu alıp kullanmasına izin vermeden önce kontrol ettiğiniz bir VM veya ana bilgisayar donanımında test edebilirsiniz.
+Anladığım kadarıyla githubi komuta kontrol yeri olarak kullanabiliriz o yüzden onu gösterdi.
+
+*Trojan Configuration:
+conflarda ne yapacağını söyleriz.Yerleştirdiğiniz her truva atının benzersiz bir tanımlayıcısı olmalıdır, böylece hem alınan verileri sıralayabilirsiniz hem de hangi truva atının belirli görevleri gerçekleştirdiğini kontrol edebilirsiniz. Truva atını, TROJANID.json için yapılandırma dizinine bakacak şekilde yapılandıracağız; bu, ayrıştırabileceğimiz, bir Python sözlüğüne dönüştürebileceğimiz ve sonra kullanabileceğimiz basit bir JSON belgesi döndürecektir. JSON biçimi, konfigürasyon seçeneklerini değiştirmeyi de kolaylaştırır. Config dizininize gidin ve aşağıdaki içeriğe sahip abc.json adlı bir dosya oluşturun:
+bu uzaktaki truva atının çalıştırmasını istediğimiz modüllerin listesini tutar.
+
+*Building a GitHub-Aware Trojan:GitHub-Aware Truva Atı Oluşturma
+Şimdi trojan truva atı için ilk adım github api'ye bağlanmayi, kimlik doğrulama ve iletişim için gerekli kodu oluşturmaktır. git_trojan.py açıp devam edelim:
+Bu tekniği tam bir botnet olarak patlatacak olsaydınız, truva atları oluşturma, kimliklerini ayarlama, GitHub'a gönderilen bir yapılandırma dosyasını otomatik olarak oluşturma ve ardından truva atını bir yürütülebilir dosyada derleme yeteneğine sahip olmak istersiniz.
+BOTNET hazırlama işinibize bırakır tabi :) 
+
+Fonksiyonları yazdik şimdi uzak dosyalrı github depomuzdan içe aktarmak için bir içe aktarma saldırısı oluşturalım.
+-->Hacking Python’s import Functionality:Python’un içe aktarma işlevini hackleme <--
+
+pythonda harici kitaplıkları içeri aktarma işlevi import function ile alabilir ve bu kütüphanenin fonksiyonalrını da kullanaibiliriz.. Truva atımız için de aynı şeyi yapabilmeyi istiyoruz, ancak bunun ötesinde, bir bağımlılık (Scapy veya netaddr gibi) çekersek, truva atımızın bu modülü takip eden tüm modüller için kullanılabilir kıldığından da emin olmak istiyoruz.
+Python, modülleri nasıl içe aktardığına kendi işlevselliğimizi eklememize izin verir, öyle ki bir modül yerel olarak bulunamazsa, ithal sınıfımız çağrılır, bu da kütüphaneyi depomuzdan uzaktan almamızı sağlar. Bu, sys.meta_path listesine özel bir sınıf eklenerek elde edilir.
+sys.meta_path ile uzaktan çekebiliriz.
+
+şimdi gitImporter sınıfını ekleyererk özel bir yükleme sınıfı oluşturalım.
+
+repoyu private e çek ondan sonra dene 
+ben bu kodu çalıştırısam anladığım dosyaları modülleri kendine dahil ediyor
+Mükemmel. Depomuza bağlandı, konfigürasyon dosyasını aldı, konfigürasyon dosyasında belirlediğimiz iki modülü içeri çekti ve çalıştırdı. Şimdi, trojan dizininizden komut satırınıza geri dönerseniz, şunu girin:
+
+bunu çalıştırınca github data modülne buradan aldığı bilgileri göndeirri
+
+
+BU OLMADI
+
+
+
+
+
+
+
+

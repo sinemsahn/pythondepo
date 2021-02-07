@@ -10,4 +10,25 @@ Sonraki adım Jython (Java ile yazılmış bir Python uygulaması) bağımsız J
 ----Burp Fuzzing----
 Tipik olarak, tüm istekleri Proxy'yi kullanarak yakalarsınız ve ilginç bir isteğin geçtiğini gördüğünüzde, onu başka bir Burp aracına gönderirsiniz.
 Özellikle, bir Intruder saldırısı sırasında fuzzing web isteklerine baktığımız için IntruderPayloadGeneratorFactory ve IIntruderPayloadGenerator sınıflarını görüyorum. IIntruderPayloadGeneratorFactory sınıfı için belgelerin neler söylediğine bir göz atalım:
+IIntruderPAyloadGeneratorFactory kısmını incelyioruz ve burada ilk ksım bize uzantımızın Burp'e doğru şekilde kaydedilmesini söyler.
+Ana Burp sınıfını ve IIntruderPayloadGeneratorFactory sınıfını genişleteceğiz. Sonra, Burp'un ana sınıfımızda iki işlevin olmasını beklediğini görüyoruz. GetGeneratorName işlevi (2), uzantımızın adını almak için Burp tarafından çağrılacak ve bizden bir dizge döndürmemiz bekleniyor. CreateNewInstance işlevi (3) bizden, oluşturmamız gereken ikinci bir sınıf olan IIntruderPayloadGenerator'ün bir örneğini döndürmemizi bekler. Şimdi bu gereksinimleri karşılamak için gerçek Python kodunu uygulayalım ve ardından IIntruderPayloadGenerator sınıfının nasıl eklendiğine bakalım. Yeni bir Python dosyası açın, bhp_fuzzer.py olarak adlandırın ve aşağıdaki kodu girin:
+Bu basit fuzzer oldukça açıklayıcıdır. Üç mutatör arasından rastgele seçim yapacağız: tek tırnaklı basit bir SQL enjeksiyon testi, bir XSS denemesi ve ardından orijinal yükte rastgele bir yığın seçip bunu rastgele sayıda tekrarlayan bir mutatör. Artık kullanabileceğimiz bir Burp Intruder eklentimiz var. Onu nasıl yükleyebileceğimize bir göz atalım.
+
+Extender->Extensisons->Add->Python diyip eklenir.
+yer beşrle 
+payloadstan extensions generated 
+
+Şimdi bir web sunucusuna karşı genişletilmiş bir keşif gerçekleştirmemize yardımcı olacak bir uzantı oluşturalım.:
+-------------Bing for Burp-----------
+bir web sunucusuna saldırırken, o tek makinen, bazılarının farkında olmayabileceğiniz birkaç web uygulamasına himzet vermesi alışılmadık değildir.Elbette, aynı web sunucusunda gösterilen bu ana bilgisyar adlarını keşfetmek istersniz, çünkü bunlar size bir kabuk elde etmenin daha kolay yolunu verebiir.
+Güvenli olmayan bir web uygulamasını veya hatta hedefinizle aynı makinede bulunan geliştirme kaynaklarını bulmak nadir değildir.
+Microsoft’un Bing arama motoru, tek bir IP adresinde bulduğu tüm web siteleri için ("IP" arama değiştiricisini kullanarak using the "IP" search modifier) Bing'i sorgulamanıza olanak tanıyan arama yeteneklerine sahiptir.
+Bing ayrıca size belirli bir etki alanının tüm alt etki alanlarını söyleyecektir ("etki alanı" değiştiricisini kullanarak). (using the “domain” modifier).
+bu sorguları programlı olarak göndermek için Bing API1'i kullanabilir ve ardından sonuçları kendimiz ayrıştırabiliriz.
+bhp_bing.py:
+
+
+BUNU GEÇTİMEN SON TAMAMLA
+
+
 
