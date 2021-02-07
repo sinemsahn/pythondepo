@@ -1,0 +1,4 @@
+5 de şifre brutteforce dön
+6 da api olmadığından bing arama kısmına dön
+7 de github abi çok deneyince sanırım 403 veriyor ona bir bak trojan bendeki bilgiyi modülü çalıştırıp depolamalı ama modülü çalıştırma kısmında olamsı lazım hata veriyor
+

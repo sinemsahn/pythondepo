@@ -1,0 +1,12 @@
+bu modülde truva atına eklenevbilecek modül özellikleri olan keyloger gibi özelliklerin nasıl yazılacaklarını anlatıyor.
+modülleri denemek için lab ortamı hazırla .
+ilk önce kodların sadece modüllerini deneyelim.Modüllerin çalıştığını garantileyince onalrı gite import eder uzaktan naısl çalıştıracağımızı deneriz sonuçlarını nasıl gite yükleyebileceğimizi deneriz. ****
+
+-->Keylogging for Fun and Keystrokes:Eğlence ve Tuş Vuruşları için Tuş Günlüğü<--
+
+modulleri blackpythona at privatea al ?
+PyHook1 adlı bir pytohn kitaplığı tüm klavye olaylarını kolayca yakalamamızı sağlar.
+Belirli Windows olayları için çağrılacak kullanıcı tanımlı bir işlevi kurmanıza olanak tanıyan yerel Windows işlevi SetWindowsHookEx'in avantajlarından yararlanır. Klavye olayları için bir kanca hook  kaydederek, bir hedefin neden olduğu tüm tuş vuruşlarını yakalayabiliriz. 
+keylogger.py :kelogerı artık trojen modullerimize ataibliriz.
+çıktısı: winde çalıştır.
+
