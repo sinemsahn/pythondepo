@@ -1,0 +1,50 @@
+Windows COM otomasyonu, ağ tabanlı hizmetlerle etkileşimden kendi uygulamanıza bir Microsoft Excel elektronik tablosu yerleştirmeye kadar bir dizi pratik kullanıma hizmet eder. Windows XP'den itibaren tüm Windows sürümleri uygulamalara bir Internet Explorer COM nesnesi eklemenize izin verir ve bu bölümde bu beceriden yararlanacağız. Yerel IE otomasyon nesnesini kullanarak, bir kullanıcı onunla etkileşim halindeyken bir web sitesinden kimlik bilgilerini çalabileceğimiz tarayıcı tarzı bir saldırı oluşturacağız. Bu kimlik bilgisi çalma saldırısını genişletilebilir hale getireceğiz, böylece birkaç hedef web sitesi toplanabilir. Son adım, bir hedef sistemden veri sızdırmak için Internet Explorer'ı kullanacaktır. Sızdırılan verileri korumak için bazı genel anahtar kriptoları ekleyeceğiz, böylece şifresini yalnızca biz çözebiliriz.
+Internet Explorer mı dedin? Google Chrome ve Mozilla Firefox gibi diğer tarayıcılar bugünlerde daha popüler olsa da, çoğu kurumsal ortam hala varsayılan tarayıcı olarak Internet Explorer'ı kullanıyor. Ve tabii ki, Internet Explorer'ı bir Windows sisteminden kaldıramazsınız - bu nedenle bu teknik her zaman Windows truva atınız tarafından kullanılabilir olmalıdır.
+
+->Man-in-the-Browser (Kind Of Bir Tür):
+klasik ortadaki adam saldırısının bir çeşididir.
+Bir iletişimin ortasında hareket etmek yerine, kötü amaçlı yazılım kendini yükler ve şüphelenmeyen hedefin tarayıcısından kimlik bilgilerini veya hassas bilgileri çalar. Bu kötü amaçlı yazılım türlerinin çoğu (genellikle Tarayıcı Yardımcı Nesneleri olarak adlandırılır) kendilerini tarayıcıya ekler veya tarayıcı işleminin kendisini yönetebilmeleri için başka bir şekilde kod enjekte eder. Tarayıcı geliştiricileri bu teknikleri bildikçe ve antivirüs satıcıları bu davranışı giderek daha fazla aradıkça, biraz daha sinsice yaklaşmalıyız. Yerel COM arayüzünü Internet Explorer için kullanarak, sosyal ağ siteleri veya e-posta girişleri için kimlik bilgileri almak için herhangi bir IE oturumunu kontrol edebiliriz. Elbette bu mantığı, bir kullanıcının şifresini değiştirmek veya oturum açtığı oturumda işlem yapmak için genişletebilirsiniz. Hedefinize bağlı olarak, bu tekniği tuş vuruşlarını yakalarken onları bir sitede yeniden kimlik doğrulamaya zorlamak için keylogger modülünüzle birlikte de kullanabilirsiniz.
+Facebook veya Gmail'e göz atan bir kullanıcıyı izleyecek, kimlik doğrulamasını kaldıracak ve ardından kullanıcı adını ve şifresini kontrol ettiğimiz bir HTTP sunucusuna göndermek için giriş formunu değiştirecek basit bir örnek oluşturarak başlayacağız. HTTP sunucumuz daha sonra onları gerçek oturum açma sayfasına yönlendirecektir.
+Daha önce herhangi bir JavaScript geliştirmesi yaptıysanız, IE ile etkileşim için COM modelinin çok benzer olduğunu fark edeceksiniz. Facebook ve Gmail'i seçiyoruz çünkü kurumsal kullanıcıların hem şifreleri yeniden kullanma hem de bu hizmetleri iş için kullanma (özellikle iş postalarını Gmail'e iletme, iş arkadaşlarıyla Facebook sohbeti kullanma vb.) Kötü bir alışkanlığı var. Mitb.py'yi açalım ve aşağıdaki kodu girelim:
+
+, bu nedenle gelecekteki bir ev ödevi projesi olarak, çerezleri çekmenin veya depolanan kimlik bilgilerini bir resim etiketi veya daha az şüpheli görünen başka yollarla DOM üzerinden itmenin yollarını düşünebilirsiniz.
+
+->Creating the Server:
+artik saldiri kodumuz tamam kimlik bilgilerini gönderildikleri anda toplamak için basit bir http sunucusu oluşturalım. cred_server.py: 
+
+Artık kullanıcının kimlik bilgilerini bu şekilde yakalayabildiğimize göre, bir hedef ağdan bilgi sızmasına yardımcı olmak için IE'yi nasıl oluşturabileceğimize bakalım.
+ikisni de çalıştır:
+C:\>python.exe cred_server.py
+lsd=AVog7IRe&email=justin@nostarch.com&pass=pyth0nrocks&default_persistent=0&¬
+timezone=180&lgnrnd=200229_SsTf&lgnjs=1394593356&locale=en_US
+localhost - - [12/Mar/2014 00:03:50] "POST /www.facebook.com HTTP/1.1" 301 -
+olması gerekn bu. ama çalışmadı
+
+
+-->IE COM Automation for Exfiltration:
+Karim Nathoo, IE COM otomasyonunun, bir ağdan bilgi almak için tipik olarak güvenilen ve beyaz listeye alınan Iexplore.exe işlemini kullanmanın harika faydasına sahip olduğuna dikkat çekti.
+İlk olarak yerel dosya sisteminde microsoft wprd belgerini arayacak bir python komut dosyası oluşturacağız.Bir belgeyle karşılaşıldığında komut dosyası onu genel anahtar şifrelenmesini kullanarak şifreler.belge şifrelendikten sonra şifrelnemiş belgeyi tumblr.com'daki bir bloga gönderme işlemini otomatikleştireceğiz.Bu, başka kimsenin şifresini çözmesine izin vermeden, belgeyi bırakmamızı ve istediğimizde geri almamızı sağlayacaktır. Tumblr gibi güvenilir bir site kullanarak, bir güvenlik duvarının veya proxy'nin sahip olabileceği herhangi bir kara listeyi de atlayabilmeliyiz, aksi takdirde belgeyi kontrol ettiğimiz bir IP adresine veya web sunucusuna göndermemizi engelleyebilir.
+
+?Küçük bir numara (Chrome geliştirici araçlarını gözlemleyerek öğrenildi) (1), Tumblr’ın JavaScript’inin Gönder düğmesini etkinleştirmesi için odağı gönderinin ana içerik kısmından uzaklaştırmamız gerektiğidir. Bu ince küçük numaralar, bu tekniği diğer sitelere uygularken not almanız önemlidir. Artık oturum açıp Tumblr'a gönderi gönderebileceğimize göre, senaryomuz için son rötuşları yapalım.:One little trick (learned by observing in Chrome developer tools) (1) is that we have to shift focus away from the main content part of the post so that Tumblr’s JavaScript enables the Post button. These subtle little tricks are important to jot down as you apply this technique to other sites. Now that we can log in and post to Tumblr, let’s put the finishing touches in place for our script.
+
+once keygen calistir hesap ac sonra ie_exfil calistir sonra decrypte.py
+
+Bu kod parçasının pek çok hareketli parçası vardır, ancak kullanımı oldukça kolaydır. İe_exfil.py betiğinizi bir Windows ana bilgisayarından çalıştırın ve Tumblr'a başarıyla gönderildiğini göstermesini bekleyin. Internet Explorer'ı görünür halde bıraktıysanız, tüm süreci izleyebilmelisiniz. Tamamlandıktan sonra, Tumblr sayfanıza göz atabilmeli ve Şekil 9-1 gibi bir şey görebilmelisiniz.
+
+Gördüğünüz gibi dosyamızın adı olan büyük bir şifrelenmiş blob var. Aşağı kaydırırsanız, yazı tipinin artık kalın olmadığı yerde başlığın bittiğini açıkça göreceksiniz. Başlığı decryptor.py dosyanıza kopyalayıp yapıştırırsanız ve çalıştırırsanız, şuna benzer bir şey görmelisiniz:
+
+Mükemmel! İe_exfil.py betiğim Windows Hata Ayıklama Araçları dizininden bir belge aldı, içeriği Tumblr'a yükledi ve dosya adının şifresini başarıyla çözebilirim. Şimdi elbette dosyanın tüm içeriğini yapmak için, Bölüm 5'te size gösterdiğim hileleri (urllib2 ve HTMLParser kullanarak) kullanarak otomatikleştirmek isteyeceksiniz, bunları sizin için bir ev ödevi olarak bırakacağım. Dikkate alınması gereken diğer bir nokta da ie_exfil.py betiğimizde son 256 baytı boşluk karakteriyle dolduruyoruz ve bu, belirli dosya biçimlerini bozabilir. Projeyi genişletmek için başka bir fikir, blog yazısı içeriğinin başlangıcında, siz onu doldurmadan önce belgenin orijinal boyutunu size söyleyen bir uzunluk alanını şifrelemektir. Blog yazısı içeriğinin şifresini çözdükten sonra bu uzunlukta okuyabilir ve dosyayı tam olarak bu boyuta kırpabilirsiniz.
+
+olamsı gereken bir blog sayfasi 
+#:> python decryptor.py
+C:\Program Files\Debugging Tools for Windows (x86)\dml.doc
+#:>
+
+DENE
+
+
+
+
+
+
+

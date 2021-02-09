@@ -10,3 +10,30 @@ Belirli Windows olayları için çağrılacak kullanıcı tanımlı bir işlevi 
 keylogger.py :kelogerı artık trojen modullerimize ataibliriz.
 çıktısı: winde çalıştır.
 
+-->Taking Screenshots:
+bu bilgileri windows apiye yerel çağrılar yapmak için PyWin32 paketini kullanabiliriz.Bir ekran görüntüsü yakalayıcı, toplam ekran boyutu gibi gerekli özellikleri belirlemek ve görüntüyü almak için Windows Grafik Aygıt Arayüzünü (GDI) kullanacaktır.Bazı ekran görüntüsü yazılımları yalnızca o anda aktif olan pencerenin veya uygulamanın bir resmini çeker, ancak bizim durumumuzda ekranın tamamını istiyoruz.
+screenshotter.py: çalıştır TMAMAdır .bmp olarak kaydetti :)
+
+--> Pythonic shellcode execution:
+Ham kabuk kodunu raw shellcode çalıştırmak için, bellekte bir arabellek oluşturmamız buffer in memory ve ctypes modülünü kullanarak bu belleğe bir işlev işaretçisi pointer oluşturmamız ve işlevi çağırmamız gerekir.
+Biz, bir web sunucusundan shellcode'base64 formatında almak için utllib2'yi kullanacağız ve sonra onu çalıştıracağız.
+sehl_exec.py:
+Standart Linux komut satırını kullanarak shellcode'u basitçe base64 olarak kodladık. Bir sonraki küçük numara, SimpleHTTPServer modülünü kullanarak mevcut çalışma dizininizi (bizim durumumuzda, / tmp /) web kökü olarak ele alır. Herhangi bir dosya talebi sizin için otomatik olarak sunulacaktır. Şimdi shell_exec.py betiğinizi Windows VM'nize bırakın ve çalıştırın. Linux terminalinizde aşağıdakileri görmelisiniz:
+
+justin$ base64 -i shellcode.raw > shellcode.bin
+justin$ python -m SimpleHTTPServer
+Serving HTTP on 0.0.0.0 port 8000 ...
+
+raw base64 ile yaptın sonra htto ile yükledin ve windowstan bu kodu çalıştırınca shell.py sana çeker b4 decode eder ve çalışır shelin ters bağlantı alırsın windowstan makinene
+192.168.112.130 - - [12/Jan/2014 21:36:30] "GET /shellcode.bin HTTP/1.1" 200 -
+Bu, betiğinizin, SimpleHTTPServer modülünü kullanarak kurduğunuz basit web sunucusundan kabuk kodunu aldığını gösterir. Her şey yolunda giderse, çerçevenize geri bir kabuk alacaksınız ve calc.exe'yi açmış olacaksınız veya bir mesaj kutusu veya kabuk kodunuzun ne için derlendiğini görüntüleyeceksiniz.
+
+-->Sandbox Detection:
+Truva atımızın bir sandbox içinde çalışıp çalışmadığını belirlemeye çalışmak için birkaç gösterge kullanabiliriz. Hedef makinemizi, tuş vuruşları ve fare tıklamaları dahil olmak üzere son kullanıcı girdileri için izleyeceğiz.
+Ardından, tuş vuruşlarını, fare tıklamaları ve çift tıklamaları aramak için bazı temel bilgiler ekleyeceğiz.
+Ardından, tuş vuruşlarını, fare tıklamaları ve çift tıklamaları aramak için bazı temel bilgiler ekleyeceğiz. Komut dosyamız, temel korumalı alan algılama yöntemlerine yanıt vermeye çalışmak için korumalı alan operatörünün tekrar tekrar giriş gönderip göndermediğini (yani, sürekli fare tıklamalarının şüpheli ve hızlı bir şekilde art arda gelmesi) belirlemeye çalışacaktır. Bir kullanıcının makineyle en son ne zaman etkileşimde bulunduğu ile makinenin ne kadar süredir çalıştığını karşılaştıracağız, bu da bize bir korumalı alanda olup olmadığımıza dair iyi bir fikir verecektir. Tipik bir makine, önyüklendiğinden bu yana günün bir noktasında birçok etkileşime sahiptir, oysa sanal alan ortamında genellikle hiçbir kullanıcı etkileşimi yoktur, çünkü sanal alanlar genellikle otomatik bir kötü amaçlı yazılım analiz tekniği olarak kullanılır.
+Daha sonra yürütmeye devam etmek isteyip istemediğimize karar verebiliriz. Korumalı alan algılama kodu üzerinde çalışmaya başlayalım. Sandbox_detect.py dosyasını açın ve aşağıdaki kodu girin:
+
+
+
+

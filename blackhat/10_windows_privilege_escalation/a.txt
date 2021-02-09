@@ -1,0 +1,132 @@
+Tipik bir ayrıcalık artırmada, kötü kodlanmış bir sürücüden veya yerel windows çekirdeği sorunundan yararlanacaksiniz, ancak düşük kaliteli bir açık kullanırsanız veya kötüye kullanma sırasında bir sorun varsa, sistem kararsızlığı riskini alırsınız. Windows'ta yükseltilmiş ayrıcalıklar edinmenin başka yollarını keşfedeceğiz.
+Büyük kuruluşlardaki sistem yöneticileri, genellikle görevleri otomatikleştirmek için alt işlemleri yürütecek veya VBScript veya PowerShell komut dosyalarını çalıştıracak zamanlanmış görevlere veya hizmetlere sahiptir. Satıcılar da genellikle aynı şekilde davranan otomatik, yerleşik görevlere sahiptir. Dosyaları işleyen veya düşük ayrıcalıklı kullanıcılar tarafından yazılabilen ikili dosyaları çalıştıran yüksek ayrıcalıklı işlemlerden yararlanmaya çalışacağız.
+
+Yeni süreçlerin oluşturulmasını izleyen esnek bir arayüz oluşturmak için Windows WMI programlamasının nasıl uygulanacağını öğrenerek başlayacağız.
+Dosya yolları, süreci oluşturan kullanıcı ve etkinleştirilen ayrıcalıklar gibi faydalı verileri topluyoruz. Süreç izlememiz daha sonra, oluşturulan tüm yeni dosyaları ve bunlara yazılanları sürekli olarak izleyen bir dosya izleme komut dosyasına tüm dosya yollarını aktarır. Bu bize hangi dosyalara yüksek ayrıcalıklı işlemlerle erişildiğini ve dosyanın konumunu söyler. Son adım, dosya oluşturma sürecini durdurmaktır, böylece komut dosyası kodu enjekte edebilir ve yüksek ayrıcalıklı işlemin bir komut kabuğu çalıştırmasını sağlayabiliriz. Tüm bu sürecin güzelliği, herhangi bir API bağlantısı içermemesidir, bu nedenle çoğu antivirüs yazılımının radarı altında uçabiliriz.
+
+->Installing the Prerequisites: Wndows VMde olsun diyor adam :)))
+
+easy_install yüklü olmalı
+C:\> easy_install pywin32 wmi
+bunu indir Herhangi bir nedenle bu kurulum yöntemi sizin için işe yaramazsa, PyWin32 yükleyicisini doğrudan http://sourceforge.net/projects/ pywin32 / adresinden indirin.
+Ardından, teknoloji incelemecilerim Dan Frisch ve Cliff Janzen'in benim için yazdığı örnek hizmeti yüklemek isteyeceksiniz. Bu hizmet, büyük kurumsal ağlarda ortaya çıkardığımız yaygın bir dizi güvenlik açığını taklit eder ve bu bölümdeki örnek kodu göstermeye yardımcı olur.
+dedi bhpservice olanı indiremedim 404 veriyor
+
+-->Creating a Process Monitor:
+(http: // eljefe .immunityinc.com / bu dediği projeye bir bak.
+
+->Process Monitoring with WMI:
+WMI API, programcıya sistemi belirli olaylar için izleme ve bu olaylar gerçekleştiğinde geri çağırma alma yeteneği sağlar. Bir işlem her oluşturulduğunda bir geri arama almak için bu arayüzden yararlanacağız. Bir süreç oluşturulduğunda, amaçlarımız için bazı değerli bilgileri yakalayacağız: sürecin yaratıldığı zaman, süreci başlatan kullanıcı, başlatılan yürütülebilir dosya ve komut satırı argümanları, işlem kimliği ve üst süreç kimliği.
+Bu bize daha yüksek ayrıcalıklı hesaplar tarafından oluşturulan tüm işlemleri ve özellikle VBScript veya toplu komut dosyaları gibi harici dosyaları çağıran tüm işlemleri gösterecektir. Tüm bu bilgilere sahip olduğumuzda, işlem belirteçlerinde hangi ayrıcalıkların etkinleştirildiğini de belirleyeceğiz. Bazı nadir durumlarda, normal bir kullanıcı olarak oluşturulmuş ancak yararlanabileceğiniz ek Windows ayrıcalıkları verilmiş işlemler bulacaksınız.
+Şimdi  temel işlem bilgileirni sağlayan çok basit bir izleme betiği1 oluşturaralım.ardından etkinleştirilen ayrıvalıkları belirlemek için bunun züerine inşa edelim Örneğin, SYSTEM tarafından oluşturulan yüksek ayrıcalıklı süreçler hakkında bilgi yakalamak için, izleme komut dosyanızı Yönetici olarak çalıştırmanız gerekeceğini unutmayın. Process_monitor.py'ye aşağıdaki kodu ekleyerek başlayalım:
+kodu çalıştırdığımda:
+işlemleri yakalam işlemini  yapamadım!! çalışıyro dosya oluşturuyor process_ bilmem ne diye ama devamı gelmedi !!!!
+
+
+Komut dosyasını çalıştırdıktan sonra notepad.exe ve calc.exe'yi çalıştırdım. Bilginin doğru bir şekilde çıktığını görebilir ve her iki işlemin de Ana PID'nin VM'imdeki explorer.exe'nin işlem kimliği olan 508 olarak ayarlandığını fark edebilirsiniz. Artık uzun bir ara verebilir ve bu komut dosyasının bir gün çalışmasına izin verebilir ve tüm işlemleri, zamanlanmış görevleri ve çalışan çeşitli yazılım güncelleyicileri görebilirsiniz. Şanslıysanız (yoksa) kötü amaçlı yazılımları da tespit edebilirsiniz. Bu eylemlerden oluşturulan olaylar ayrıcalıklı süreçleri gösterebileceğinden, oturumu kapatıp hedefinizde tekrar oturum açmak da yararlıdır. Artık temel süreç izlemeye sahip olduğumuza göre, günlük kayıtlarımızdaki ayrıcalıklar alanını dolduralım ve Windows ayrıcalıklarının nasıl çalıştığı ve neden önemli oldukları hakkında biraz bilgi edinelim.
+
+-->Windows Token Privileges:
+
+Microsoft'a göre bir Windows belirteci: "bir işlemin veya iş parçacığının güvenlik bağlamını tanımlayan bir nesnedir." 3 Bir belirteç nasıl başlatılır ve bir belirteç üzerinde hangi izinler ve ayrıcalıkların ayarlandığı, bu işlemin veya iş parçacığının hangi görevleri gerçekleştirebileceğini belirler. İyi niyetli bir geliştirici, bir güvenlik ürününün parçası olarak, ayrıcalıklı olmayan bir kullanıcıya sürücü olan ana Windows hizmetini kontrol etme yeteneği vermek isteyeceği bir sistem tepsisi uygulamasına sahip olabilir. Geliştirici, işlemde yerel Windows API işlevi AdjustTokenPrivileges'i kullanır ve sistem tepsisi uygulamasına SeLoadDriver ayrıcalığını yeterince masum bir şekilde verir
+
+Geliştiricinin düşünmediği şey, bu sistem tepsisi uygulamasının içine tırmanabilirseniz, artık istediğiniz sürücüyü yükleme veya boşaltma olanağına da sahip olduğunuz gerçeğidir, bu da bir çekirdek modu rootkit'i bırakabileceğiniz anlamına gelir - ve bu da oyun anlamına gelir bitmiş.
+
+Unutmayın, süreç monitörünüzü SİSTEM veya yönetici kullanıcı olarak çalıştıramazsanız, o zaman hangi işlemleri izleyebildiğinize göz kulak olmanız ve yararlanabileceğiniz ek ayrıcalıklar olup olmadığını görmeniz gerekir. Kullanıcınız olarak yanlış ayrıcalıklarla çalışan bir işlem, SYSTEM'e ulaşmanın veya çekirdekte kod çalıştırmanın harika bir yoludur. Her zaman dikkat ettiğim ilginç ayrıcalıklar Tablo 10-1'de listelenmiştir. Kapsamlı değildir, ancak iyi bir başlangıç noktasıdır.
+
+SeBackupPrivilege:Bu, kullanıcı işleminin dosyaları ve dizinleri yedeklemesini sağlar ve ACL'nin tanımladığı şey ne olursa olsun dosyalara OKUMA erişimi verir.
+
+SeDebugPrivilege:Bu, kullanıcı işleminin diğer işlemlerde hata ayıklamasını sağlar. Bu ayrıca, DLL'leri veya kodu çalışan işlemlere enjekte etmek için işlem tanıtıcıları edinmeyi içerir.
+
+SeLoadDriver:Bu, bir kullanıcı işleminin sürücüleri yüklemesini veya kaldırmasını sağlar.
+
+
+artık izlediğiimzi işlemlerde ayrıcalıkları otomatik oalrak almak için python kodumuzu yazalım:Win32security, win32api ve win32con modüllerini kullanacağız.Bu modülleri yükleyemediğiniz bir durumla karşılaşırsanız, aşağıdaki işlevlerin tümü ctypes kitaplığı kullanılarak yerel çağrılara çevrilebilir; bu sadece çok daha fazla iş. Aşağıdaki kodu process_monitor.py'ye doğrudan mevcut log_to_file işlevimizin üzerine ekleyin:
+çalıştırınca:C:\> python.exe process_monitor.py
+20130907233506.055054-300,JUSTIN-V2TRL6LD\Administrator,C:\WINDOWS\system32\¬
+notepad.exe,"C:\WINDOWS\system32\notepad.exe" ,660,508,SeChangeNotifyPrivilege¬
+|SeImpersonatePrivilege|SeCreateGlobalPrivilege|
+20130907233515.914176-300,JUSTIN-V2TRL6LD\Administrator,C:\WINDOWS\system32\¬
+calc.exe,"C:\WINDOWS\system32\calc.exe" ,1004,508,SeChangeNotifyPrivilege|¬
+SeImpersonatePrivilege|SeCreateGlobalPrivilege|
+bu şekilde ayricalik bilgilerini gormem lazim.
+
+Bu işlemler için etkinleştirilmiş ayrıcalıkları doğru şekilde günlüğe kaydettiğimizi görebilirsiniz. Yalnızca ayrıcalıksız bir kullanıcı olarak çalışan ancak ilginç ayrıcalıklara sahip olan işlemleri günlüğe kaydetmek için komut dosyasına kolayca bazı bilgiler ekleyebiliriz. Bu süreç izleme kullanımının, harici dosyaları güvenli olmayan bir şekilde kullanan süreçleri bulmamıza nasıl izin vereceğini göreceğiz.
+Bende dönen:
+C:\Users\sinem>python C:\Users\sinem\Desktop\process.py
+20210209180824.926559+180,DESKTOP-20PJ9G9\sinem,C:\WINDOWS\system32\notepad.exe,"C:\WINDOWS\system32\notepad.exe" ,10432,9368,SeChangeNotifyPrivilege
+
+20210209180843.406950+180,DESKTOP-20PJ9G9\sinem,C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_10.2012.21.0_x64__8wekyb3d8bbwe\Calculator.exe,"C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_10.2012.21.0_x64__8wekyb3d8bbwe\Calculator.exe" -ServerName:App.AppXsm3pg4n7er43kdh1qp4e79f1j7am68r8.mca,2004,1336,SeChangeNotifyPrivilege
+
+20210209180843.470588+180,DESKTOP-20PJ9G9\sinem,C:\Windows\System32\RuntimeBroker.exe,C:\Windows\System32\RuntimeBroker.exe -Embedding,3492,1336,SeChangeNotifyPrivilege
+
+20210209180852.349668+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" ,12128,9368,SeChangeNotifyPrivilege
+
+20210209180854.597193+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe --type=crashpad-handler --user-data-dir=C:\Users\sinem\AppData\Roaming\Evernote /prefetch:7 --no-rate-limit --monitor-self-annotation=ptype=crashpad-handler --database=C:\Users\sinem\AppData\Roaming\Evernote\Crashpad --url=https://sentry.io/api/4165298/minidump?sentry_key=0d41f86b760d4062b7f6d97a32dabcbf --annotation=_productName=Evernote --annotation=_version=10.4.4 --annotation=prod=Electron --annotation=ver=10.1.3 --initial-client-data=0x4b4,0x4c0,0x804,0x7fc,0x808,0x7ff7a0f59cd0,0x7ff7a0f59ce0,0x7ff7a0f59cf0,11680,12128,SeChangeNotifyPrivilege
+
+20210209180854.670100+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=utility --utility-sub-type=network.mojom.NetworkService --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --lang=tr --service-sandbox-type=network --standard-schemes=app --secure-schemes --bypasscsp-schemes --cors-schemes=en-cache --fetch-schemes=en-cache --service-worker-schemes --mojo-platform-channel-handle=2144 /prefetch:8,3256,12128,SeChangeNotifyPrivilege
+
+20210209180854.710303+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=renderer --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --lang=tr --standard-schemes=app --secure-schemes --bypasscsp-schemes --cors-schemes=en-cache --fetch-schemes=en-cache --service-worker-schemes --app-user-model-id=Evernote --app-path="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar" --node-integration --no-sandbox --no-zygote --enable-remote-module --background-color=#fff --enable-spellcheck --enable-websql --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --no-v8-untrusted-code-mitigations --mojo-platform-channel-handle=2468 /prefetch:1,4496,12128,SeChangeNotifyPrivilege
+
+20210209180854.531257+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=gpu-process --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --gpu-preferences=MAAAAAAAAADgAAAwAAAAAAAAAAAAAAAAAABgAAAAAAAQAAAAAAAAAAAAAAAAAAAAKAAAAAQAAAAgAAAAAAAAACgAAAAAAAAAMAAAAAAAAAA4AAAAAAAAABAAAAAAAAAAAAAAAAUAAAAQAAAAAAAAAAAAAAAGAAAAEAAAAAAAAAABAAAABQAAABAAAAAAAAAAAQAAAAYAAAA= --mojo-platform-channel-handle=1748 /prefetch:2,8724,12128,SeChangeNotifyPrivilege
+
+20210209180857.176454+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=renderer --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --lang=tr --standard-schemes=app --secure-schemes --bypasscsp-schemes --cors-schemes=en-cache --fetch-schemes=en-cache --service-worker-schemes --app-user-model-id=Evernote --app-path="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar" --no-sandbox --no-zygote --preload="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar\preloadHelper.js" --enable-remote-module --background-color=#FFFFFF --enable-spellcheck --enable-websql --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=7 --no-v8-untrusted-code-mitigations --mojo-platform-channel-handle=2924 /prefetch:1,7060,12128,SeChangeNotifyPrivilege
+
+20210209180859.547170+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=renderer --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --lang=tr --standard-schemes=app --secure-schemes --bypasscsp-schemes --cors-schemes=en-cache --fetch-schemes=en-cache --service-worker-schemes --app-user-model-id=Evernote --app-path="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar" --enable-plugins --webview-tag --no-sandbox --no-zygote --preload="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar\preload.js" --enable-remote-module --background-color=#FFFFFF --enable-spellcheck --enable-websql --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=9 --no-v8-untrusted-code-mitigations --mojo-platform-channel-handle=3216 /prefetch:1,14256,12128,SeChangeNotifyPrivilege
+
+20210209180902.625296+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=renderer --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --lang=tr --standard-schemes=app --secure-schemes --bypasscsp-schemes --cors-schemes=en-cache --fetch-schemes=en-cache --service-worker-schemes --app-user-model-id=Evernote --app-path="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar" --no-sandbox --no-zygote --preload="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar\preloadLoggedIn.js" --enable-remote-module --background-color=#FFFFFF --enable-spellcheck --enable-websql --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=11 --no-v8-untrusted-code-mitigations --mojo-platform-channel-handle=3492 /prefetch:1,10016,12128,SeChangeNotifyPrivilege
+
+20210209180905.783922+180,DESKTOP-20PJ9G9\sinem,C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe,"C:\Users\sinem\AppData\Local\Programs\Evernote\Evernote.exe" --type=renderer --field-trial-handle=1704,17299597451539667698,4099326676830608219,131072 --enable-features=WebComponentsV0Enabled --disable-features=CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess --lang=tr --standard-schemes=app --secure-schemes --bypasscsp-schemes --cors-schemes=en-cache --fetch-schemes=en-cache --service-worker-schemes --app-user-model-id=Evernote --app-path="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar" --no-sandbox --no-zygote --preload="C:\Users\sinem\AppData\Local\Programs\Evernote\resources\app.asar\preloadLoggedIn.js" --enable-remote-module --background-color=#FFFFFF --enable-spellcheck --enable-websql --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=13 --no-v8-untrusted-code-mitigations --mojo-platform-channel-handle=3324 /prefetch:1,15484,12128,SeChangeNotifyPrivilege
+
+
+-->Winning the Race:Yarışı Kazanmak:
+
+Toplu komut dosyaları, VBScript ve PowerShell komut dosyaları, sıradan görevleri otomatikleştirerek sistem yöneticilerinin hayatlarını kolaylaştırır. Amaçları, sürekli olarak merkezi bir envanter hizmetine kaydolmaktan, yazılım güncellemelerini kendi havuzlarından zorlamaya kadar değişebilir. Yaygın bir sorun, bu komut dosyası dosyalarında uygun ACL'lerin olmamasıdır. Bazı durumlarda, güvenli olmayan sunucularda, herhangi bir kullanıcı tarafından global olarak yazılabilirken SYSTEM kullanıcısı tarafından günde bir kez çalıştırılan toplu komut dosyaları veya PowerShell komut dosyaları buldum.
+Süreç izleyicinizi bir kuruluşta yeterince uzun süre çalıştırırsanız (veya sadece bu bölümün başında sağlanan örnek hizmeti yüklerseniz), aşağıdaki gibi görünen işlem kayıtları görebilirsiniz:
+20130907233515.914176-300,NT AUTHORITY\SYSTEM,C:\WINDOWS\system32\cscript.exe, C:\WINDOWS\system32\cscript.exe /nologo "C:\WINDOWS\Temp\azndldsddfggg.vbs",1004,4,SeChangeNotifyPrivilege|SeImpersonatePrivilege|SeCreateGlobal¬
+Privilege|
+Bir SYSTEM işleminin cscript.exe ikili dosyasını oluşturduğunu görebilirsiniz.
+ve C: \ WINDOWS \ Temp \ andldsddfggg vbs parametresinde geçildi. Sağlanan örnek hizmet, bu olayları dakikada bir oluşturmalıdır. Bir dizin listesi yaparsanız, bu dosyanın mevcut olduğunu görmezsiniz. Olan şey, hizmetin rastgele bir dosya adı oluşturması, VBScript'i dosyaya itmesi ve ardından bu VBScript'i çalıştırmasıdır. Bu eylemin ticari yazılımlar tarafından birçok durumda gerçekleştirildiğini gördüm ve dosyaları geçici bir konuma kopyalayan, çalıştıran ve sonra bu dosyaları silen yazılımlar gördüm.
+Bu durumdan yararlanmak için, yürütme koduna karşı etkin bir şekilde yarışı kazanmalıyız. Yazılım veya zamanlanmış görev dosyayı oluşturduğunda, süreç onu yürütmeden ve sonunda silmeden önce kendi kodumuzu dosyaya enjekte edebilmemiz gerekir. Bunun püf noktası, dosyalarda veya alt dizinlerde herhangi bir değişiklik olup olmadığını görmek için bir dizini izlememizi sağlayan ReadDirectoryChangesW adlı kullanışlı Windows API'sidir. Ayrıca, dosyanın ne zaman "kaydedildiğini" belirleyebilmek için bu olayları filtreleyebiliriz, böylece kodumuzu çalıştırılmadan önce hızlı bir şekilde enjekte edebiliriz. Tüm geçici dizinlere 24 saat veya daha uzun bir süre boyunca göz kulak olmak inanılmaz derecede yararlı olabilir, çünkü bazen olası ayrıcalık yükseltmelerinin yanı sıra ilginç hatalar veya bilgi ifşaları da bulabilirsiniz.
+Bir dosya izleyicisi oluşturarak başlayalım ve ardından kodu otomatik olarak enjekte etmek için bunun üzerine inşa edeceğiz. File_monitor.py adında yeni bir dosya oluşturun ve aşağıdakileri belirleyin:
+
+file_monitor.py:
+C:\> python.exe file_monitor.py
+ikinci terminalden:
+C:\> cd %temp%
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp> echo hello > filetest
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp> rename filetest file2test
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp> del file2test
+ ÇIKTI:
+ Spawning monitoring thread for path: C:\WINDOWS\Temp
+Spawning monitoring thread for path: c:\users\sinem\appdata\local\temp
+[ + ] Created c:\users\sinem\appdata\local\temp\filetest
+[ * ] Modified c:\users\sinem\appdata\local\temp\filetest
+[vvv] Dumping contents...
+hello
+
+[^^^] Dump complete.
+[ > ] Renamed from: c:\users\sinem\appdata\local\temp\filetest
+[ < ] Renamed to: c:\users\sinem\appdata\local\temp\file2test
+[ - ] Deleted c:\users\sinem\appdata\local\temp\file2test
+[ + ] Created c:\users\sinem\appdata\local\temp\aria-debug-16984.log
+
+Yukarıdakilerin tümü planlandığı gibi çalıştıysa, dosya monitörünüzü bir hedef sistemde 24 saat çalışır durumda tutmanızı tavsiye ederim. Oluşturulan, çalıştırılan ve silinen dosyaları görmek sizi şaşırtabilir (ya da etmeyebilirsiniz). İşlem izleme komut dosyanızı, izlenecek ilginç dosya yolları bulmaya çalışmak için de kullanabilirsiniz. Yazılım güncellemeleri özellikle ilgi çekici olabilir. Devam edelim ve kodu bir hedef dosyaya otomatik olarak enjekte etme özelliğini ekleyelim.
+
+-->Code Injection:
+Artık süreçleri ve dosya konumlarını izleyebildiğimize göre, kodu hedef dosyalara otomatik olarak enjekte edebilmeye bir göz atalım. Kullanıldığını gördüğüm en yaygın komut dosyası dilleri VBScript, toplu iş dosyaları ve PowerShell'dir. Kaynak hizmetin ayrıcalık düzeyi ile bhpnet.py aracımızın derlenmiş bir sürümünü oluşturan çok basit kod parçacıkları oluşturacağız. Bu komut dosyası dilleriyle yapabileceğiniz çok sayıda kötü şey var; 5 Bunu yapmak için genel bir çerçeve oluşturacağız ve oradan çılgınca koşabilirsiniz. File_monitor.py komut dosyamızı değiştirelim ve dosya değiştirme sabitlerinden sonra aşağıdaki kodu ekleyelim:
+ekledim çalıştır:
+Hizmetin çalıştığından emin olun ve sadece file_monitor.py betiğinizi çalıştırın. Sonunda, bir .vbs dosyasının oluşturulduğunu ve değiştirildiğini ve bu kodun enjekte edildiğini gösteren çıktı görmelisiniz.
+
+kodu çalıştır 2.bçlümde oluşturduğum bhpnete bağlanmalı:
+justin$ ./bhpnet.py -t 192.168.1.10 -p 9999
+<CTRL-D>
+<BHP:#> whoami
+NT AUTHORITY\SYSTEM
+<BHP:#>
+bu olmalı
+
+bu kadar ayrıcalık yükselyilmiş olur
+DENE!!
+
+
+

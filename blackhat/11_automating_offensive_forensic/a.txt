@@ -1,0 +1,68 @@
+Şifreleme anahtarlarını veya yalnızca bellekte bulunan diğer bilgileri yakalamak için genellikle etkilenen makinenin RAM'inin anlık görüntüsünü isterler.
+Şanslı oldukları için, yetenekli geliştiricilerden oluşan bir ekip, Volatility adlı bu göreve uygun, gelişmiş bir bellek adli bilişim çerçevesi olarak faturalandırılan tüm bir Python çerçevesi oluşturdu. Olay müdahale ekipleri, adli tıp denetçileri ve kötü amaçlı yazılım analistleri, Çekirdek nesnelerinin incelenmesi, süreçlerin incelenmesi ve dökümünün çıkarılması gibi çeşitli diğer görevler için de Volatilite kullanabilir.
+İlk olarak, çalışan bir VMWare sanal makinesinden parola karmalarını almak için bazı komut satırı yeteneklerini kullanmayı keşfediyoruz ve ardından, Volatilite'i komut dosyalarımıza dahil ederek bu iki aşamalı süreci nasıl otomatikleştirebileceğimizi gösteriyoruz. Son örnek, shellcode'u seçtiğimiz kesin bir konumda çalışan bir VM'ye doğrudan nasıl enjekte edebileceğimizi gösterir. Bu teknik, yalnızca bir sanal makineden e-postalara göz atan veya e-posta gönderen paranoyak kullanıcıları yakalamak için yararlı olabilir. Yönetici VM'yi geri yüklediğinde yürütülecek bir VM snapshot'ında gizli bir arka kapı da bırakabiliriz. Bu kod enjeksiyon yöntemi, erişebileceğiniz, ancak kilitli veya uykuda olan ve şifre gerektiren bir FireWire bağlantı noktasına sahip bir bilgisayarda kod çalıştırmak için de yararlıdır. Başlayalım!
+-->Votality installation:
+Uçuculuğun kurulumu son derece kolaydır; sadece https://code.google.com/p/volatility/downloads/list adresinden indirmeniz gerekir. Genelde tam kurulum yapmam. Bunun yerine, onu yerel bir dizinde tutuyorum ve dizini, aşağıdaki bölümlerde göreceğiniz gibi çalışma yoluma ekliyorum. Bir Windows yükleyici de dahildir. Tercih ettiğiniz kurulum yöntemini seçin; Ne yaparsan yap iyi çalışması gerekir.
+-->Profiles:
+Volatilite, bilgileri bellek dökümlerinden çıkarmak için gerekli imzaların ve ofsetlerin nasıl uygulanacağını belirlemek için profiller kavramını kullanır. Ancak, FireWire aracılığıyla veya uzaktan bir hedeften bir bellek görüntüsünü alabiliyorsanız, saldırdığınız işletim sisteminin tam sürümünü tam olarak bilmiyor olabilirsiniz. Neyse ki Volatility, hedefe karşı hangi profili kullanmanız gerektiğini belirlemeye çalışan imageinfo adlı bir eklenti içerir. Eklentiyi şu şekilde çalıştırabilirsiniz:
+
+$ python vol.py imageinfo -f "memorydump.img"
+
+Çalıştırdıktan sonra, iyi bir bilgi yığınını geri almalısınız. En önemli satır, aşağıdaki gibi görünmesi gereken Önerilen Profiller satırıdır::
+Suggested Profile(s) : WinXPSP2x86, WinXPSP3x86
+
+Sonraki birkaç alıştırmayı bir hedef üzerinde gerçekleştirirken, komut satırı bayrağını --profile, listelenen ilkinden başlayarak gösterilen uygun değere ayarlamalısınız. Yukarıdaki senaryoda şunları kullanacağız:
+$ python vol.py plugin --profile="WinXPSP2x86" arguments
+
+Eklentilerden hiçbiri düzgün çalışmayacağı için yanlış profili ayarlayıp ayarlamadığınızı bilirsiniz veya Volatility uygun bir adres eşlemesi bulamadığını belirten hatalar atar.
+
+-->Grabbing Password Hashes:Şifre Gizlemeleri Alma:
+Girdikten sonra bir Windows makinesinde parola karmalarını kurtarmak saldırganlar arasında ortak bir hedeftir. Bu karmalar, hedefin şifresini kurtarmak amacıyla çevrimdışı olarak kırılabilir veya diğer ağ kaynaklarına erişim elde etmek için bir şifre-geçiş saldırısında kullanılabilir. pass-the hash attack
+Bir hedef üzerindeki sanal makinelere veya anlık görüntülere bakmak, bu karmaları kurtarmaya çalışmak için mükemmel bir yerdir.
+Hedef ister yalnızca bir sanal makinede yüksek riskli işlemler gerçekleştiren paranoyak bir kullanıcı isterse de kullanıcının etkinliklerinin bir kısmını sanal makinelere taşımaya çalışan bir kuruluş olsun, sanal makineler, ana bilgisayar donanımına erişim sağladıktan sonra bilgi toplamak için mükemmel bir nokta sunar. .
+Votality bu kurtarma sürecini son derece kolaylaştırır.
+İlk olarak, parola karmalarının alınabileceği bellekteki ofsetleri almak için gerekli eklentilerin nasıl çalıştırılacağına bir göz atacağız ve ardından karmaları kendileri alacağız. Ardından, bunu tek bir adımda birleştirmek için bir komut dosyası oluşturacağız.
+
+Windows yerel parolaları karma bir biçimde SAM kayıt defteri kovanında ve bunun yanında sistem kayıt defteri kovanında depolanan Windows önyükleme anahtarını depolar. Karmaları bir bellek görüntüsünden çıkarmak için bu kovanların her ikisine de ihtiyacımız var. Başlangıç olarak, Volatility'nin bu iki kovanın yaşadığı bellekteki ofsetleri çıkarmasını sağlamak için hivelist eklentisini çalıştıralım. Ardından, gerçek hash çıkarma işlemini yapmak için bu bilgileri hashdump eklentisine aktaracağız.
+Terminalinize bırakın ve aşağıdaki komutu yürütün: 
+python vol.py hivelist --profile=WinXPSP2x86 -f "WindowsXPSP2.vmem"
+
+Bir veya iki dakika sonra, bu kayıt defteri kovanlarının bellekte nerede yaşadığını gösteren bazı çıktılar sunulmalıdır. Kısalık uğruna çıktının bir kısmını kırptım:
+
+Virtual Physical Name
+---------- ---------- ----
+0xe1666b60 0x0ff01b60 \Device\HarddiskVolume1\WINDOWS\system32\config\software
+0xe1673b60 0x0fedbb60 \Device\HarddiskVolume1\WINDOWS\system32\config\SAM
+0xe1455758 0x070f7758 [no name]
+0xe1035b60 0x06cd3b60 \Device\HarddiskVolume1\WINDOWS\system32\config\system
+Çıktıda, hem SAM hem de sistem anahtarlarının sanal ve fiziksel bellek ofsetlerini kalın olarak görebilirsiniz. Sanal ofsetin, işletim sistemiyle ilişkili olarak bellekte nerede bulunduğuyla ilgili olduğunu unutmayın. Fiziksel uzaklık, diskteki gerçek .vmem dosyasında bu kovanların bulunduğu konumdur. Artık SAM ve sistem kovanlarına sahip olduğumuza göre, sanal ofsetleri hashdump eklentisine geçirebiliriz. Terminalinize geri dönün ve sanal adreslerinizin gösterdiklerimden farklı olacağını belirterek aşağıdaki komutu girin.:
+$ python vol.py hashdump -d -d -f "WindowsXPSP2.vmem" 
+--profile=WinXPSP2x86 -y 0xe1035b60 -s 0xe17adb60
+
+Yukarıdaki komutu çalıştırmak size aşağıdakilere çok benzer sonuçlar verecektir:
+Administrator:500:74f77d7aaaddd538d5b79ae2610dd89d4c:537d8e4d99dfb5f5e92e1fa3¬
+77041b27:::
+Guest:501:aad3b435b51404ad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+HelpAssistant:1000:bf57b0cf30812c924kdkkd68c99f0778f7:457fbd0ce4f6030978d124j¬
+272fa653:::
+SUPPORT_38894df:1002:aad3b435221404eeaad3b435b51404ee:929d92d3fc02dcd099fdaec¬
+fdfa81aee:::
+
+Mükemmel! Artık karmaları favori kırma araçlarımıza gönderebilir veya diğer hizmetlerde kimlik doğrulaması yapmak için bir karma geçiş işlemi uygulayabiliriz. Şimdi bu iki aşamalı süreci alalım ve kendi bağımsız senaryomuza dönüştürelim. Grabhashes.py dosyasını açın ve aşağıdaki kodu girin:
+
+python grabhashes.py bagimsiz olarak calisti.r
+İki eklentiyi bağımsız olarak çalıştırdığınızdakiyle aynı çıktıyı görmelisiniz. Önerdiğim bir ipucu, işlevselliği birlikte zincirlemeye çalışırken (veya mevcut işlevselliği ödünç alırken), başlık altında işleri nasıl yaptıklarını görmek için Volatilite kaynak kodunu gözden geçirmenizdir. Volatilite, Scapy gibi bir Python kitaplığı değildir, ancak geliştiricilerin kodlarını nasıl kullandıklarını inceleyerek, ortaya çıkardıkları herhangi bir sınıf veya işlevi nasıl doğru bir şekilde kullanacağınızı göreceksiniz.
+Şimdi, sanal bir makineye virüs bulaştırmak için basit bir ters mühendisliğin yanı sıra hedefli kod enjeksiyonuna geçelim.
+
+BUNU ÇALITŞIR VOTALİTY İNDİRİP:
+-->Direct Code Injection:
+Bu durumların her birinde, bir ana bilgisayar sisteminin güvenliğini ihlal ettiyseniz ve VM'lerin kullanımda olduğunu görüyorsanız, bunların içine tırmanmak kullanışlı olabilir. Ayrıca ortalıkta yatan sanal makine anlık görüntü dosyalarını görüyorsanız, kalıcılık yöntemi olarak shellcode yerleştirmek için mükemmel bir yer olabilirler. Bir kullanıcı virüs bulaşmış olduğunuz bir anlık görüntüye geri dönerse, kabuk kodunuz çalıştırılır ve yeni bir kabuğunuz olur.
+Konuğa kod enjeksiyonu yapmanın bir parçası, kodu enjekte etmek için ideal bir yer bulmamız gerektiğidir. Zamanınız varsa, bir SYSTEM işleminde ana hizmet döngüsünü bulmak için mükemmel bir yer, çünkü sanal makinede yüksek düzeyde ayrıcalık garanti edilir ve kabuk kodunuz çağrılır. Olumsuz yanı, yanlış noktayı seçerseniz veya kabuk kodunuz düzgün yazılmazsa, süreci bozabilir ve son kullanıcı tarafından yakalanabilir veya sanal makinenin kendisini öldürebilirsiniz.
+Başlangıç ​​hedefi olarak Windows hesap makinesi uygulamasının bazı basit ters mühendisliğini yapacağız. İlk adım, Calc.exe'yi Bağışıklık Hata Ayıklayıcı1'e yüklemek ve = düğme işlevini bulmamıza yardımcı olan basit bir kod kapsama betiği yazmaktır. Buradaki fikir, tersine mühendisliği hızla gerçekleştirebilmemiz, kod enjeksiyon yöntemimizi test edebilmemiz ve sonuçları kolayca yeniden üretebilmemizdir. Bunu bir temel olarak kullanarak, daha zorlu hedefler bulmaya ve daha gelişmiş kabuk kodu enjekte etmeye ilerleyebilirsiniz. Ardından, elbette, FireWire'ı destekleyen bir bilgisayar bulun ve orada deneyin!
+Basit bir Bağışıklık Hata Ayıklayıcısı PyCommand ile başlayalım. Windows XP VM'nizde yeni bir dosya açın ve codecoverage.py olarak adlandırın. Dosyayı PyCommands klasörü altındaki ana Bağışıklık Hata Ayıklayıcı kurulum dizinine kaydettiğinizden emin olun.
+
+
+BUNA KOMPLE BAK :)))
+
+
+
